@@ -2,12 +2,12 @@
 
 A progressive web app for sending cryptocurrency across multiple chains (Ethereum, Bitcoin, Solana, Polygon, Base, Arbitrum, etc.) with an integrated Gemini AI assistant for transaction guidance and safety.
 
-## � Live Demo
+## :earth_africa: Live Demo
 
 🚀 Try the live app here:  
 👉 https://web3-upi.netlify.app/
 
-## �🎯 Project Overview
+## :dart: Project Overview
 
 Web3 UPI combines a clean, mobile-first crypto wallet interface with Gemini's advanced AI capabilities to help users navigate complex blockchain transactions. The app supports:
 - Multi-chain transaction sending (EVM chains, Bitcoin, Solana)
