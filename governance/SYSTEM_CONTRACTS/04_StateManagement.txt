@@ -1,0 +1,329 @@
+--------------------------------------------------
+--------------------------------------------------
+SYSTEM SNAPSHOT AUDIT HEADER
+--------------------------------------------------
+Snapshot Type: Implementation Reference
+
+Aligned With:
+- SEND_LIFECYCLE_CONTRACT_v1.0
+- SEND_THEME_CONTRACT_v1.0
+
+Last Alignment:
+30 January 2026, 11:17:46 AM IST (+05:30)
+
+Change Trace (High-Level):
+- Initialization and re-entry boundaries formalized via Lifecycle Contract
+- State persistence rules during overlay toggle explicitly defined
+- No runtime state mutation logic altered
+
+Audit Notes:
+- This snapshot reflects the system AFTER the above alignments
+- Changes describe behavioral intent, not exact code diffs
+- Snapshot body below is preserved verbatim
+- No snapshot content was rewritten, reordered, or refactored
+--------------------------------------------------
+
+
+SUBSYSTEM CONTRACT: STATE MANAGEMENT SYSTEM
+===============================================================================
+Location: src/modules/send.js (objects: APP_STATE, VALIDATION_STATE, DATA_STATE,
+          DERIVED_STATE, functions: updateValidationState, updateDataState,
+          updateDerivedState)
+Dependencies: None (foundation layer)
+Dependents: All other subsystems (everyone reads state)
+
+
+1. SYSTEM OVERVIEW
+===============================================================================
+Pipeline:
+UI Events → APP_STATE Update → Validation Derivation → Data Fetch → Derived Calculation
+
+State Management System provides FOUR sealed state objects with clear derivation rules.
+
+OWNS:
+- APP_STATE (primary state, mirrors UI inputs)
+- VALIDATION_STATE (derived from APP_STATE)
+- DATA_STATE (fetched from external, no derivation)
+- DERIVED_STATE (calculated from DATA_STATE + APP_STATE)
+
+OBSERVES:
+- DOM input elements (read once to initialize APP_STATE)
+- Network (stub fetch for price/gas data)
+
+RESPONSIBILITY:
+Maintain single source of truth for application state.
+Enforce derivation rules (VALIDATION never set directly, always computed).
+Provide debug logging for state transitions.
+
+
+2. AUTHORITY MODEL
+===============================================================================
+STATE AUTHORITY HIERARCHY:
+
+PRIMARY (directly set):
+  APP_STATE:
+    - chain: 'Ethereum' | 'Bitcoin' | 'Solana' | null
+    - asset: 'eth' | 'btc' | 'sol' | null
+    - recipientAddress: string | null
+    - inputMode: 'fiat' | 'asset'
+    - isBlocked: boolean
+    - isLocked: boolean
+    - source: 'manual' | 'qr' | null
+
+  DATA_STATE:
+    - gasPrice: number | null
+    - gasUnit: 'gwei' | 'sat/vB' | 'SOL' | null
+    - assetPriceUSD: number | null
+    - lastUpdated: timestamp | null
+
+DERIVED (never set directly):
+  VALIDATION_STATE:
+    - isAddressPresent: boolean
+    - isAddressValid: boolean
+    - isChainMatch: boolean
+    - isSupportedChain: boolean
+    Source: deriveValidationState(APP_STATE)
+
+  DERIVED_STATE:
+    - estimatedGasFeeNative: number | null
+    - estimatedGasFeeUSD: number | null
+    - lastDerivedAt: timestamp | null
+    Source: deriveGasFee() using DATA_STATE + APP_STATE
+
+MUTATION RULES:
+
+APP_STATE:
+  Updated by UI event handlers:
+    - Address input → recipientAddress
+    - Blocker click → inputMode
+    - Asset detection → asset, chain
+
+DATA_STATE:
+  Updated by passive fetch:
+    - updateDataState() calls fetchGasPrice + fetchAssetPrice
+    - Triggered on asset change or manual refresh
+
+VALIDATION_STATE:
+  Updated by derivation only:
+    - Object.assign(VALIDATION_STATE, deriveValidationState(APP_STATE))
+    - Called after APP_STATE changes
+
+DERIVED_STATE:
+  Updated by calculation only:
+    - DERIVED_STATE.x = deriveGasFee().x
+    - Called after DATA_STATE updates
+
+MUST NEVER:
+- Set VALIDATION_STATE fields directly (must use Object.assign + derivation)
+- Set DERIVED_STATE fields directly (must use derivation)
+- Mutate state from render functions (read-only)
+- Cache state snapshots (always read live state objects)
+
+
+3. INPUT & STATE SAFETY
+===============================================================================
+VALIDATION STRATEGY: Object.seal() prevents field addition/deletion.
+
+STATE PROTECTION:
+
+All states are Object.seal()ed:
+  const APP_STATE = Object.seal({ ... });
+
+This prevents:
+  APP_STATE.newField = 'value'; // TypeError in strict mode
+  delete APP_STATE.chain; // TypeError
+
+Allowed:
+  APP_STATE.chain = 'Ethereum'; // OK (existing field mutation)
+
+FORBIDDEN STATES:
+
+APP_STATE:
+  - chain set without asset (should be atomic)
+  - inputMode neither 'fiat' nor 'asset' (no 'both' mode)
+
+VALIDATION_STATE:
+  - isAddressValid true but isAddressPresent false (logical impossibility)
+
+DATA_STATE:
+  - gasPrice negative (filtered by fetchGasPrice)
+  - assetPriceUSD zero or negative (filtered by fetchAssetPrice)
+
+DERIVED_STATE:
+  - estimatedGasFeeUSD without estimatedGasFeeNative (should be null together)
+
+WHY PREVENTION NOT CORRECTION:
+Sealed objects force compile-time awareness of state shape.
+Developers cannot accidentally add typo fields (APP_STATE.reicpientAddress).
+
+
+4. CORE ENGINE / LOGIC CONTRACT
+===============================================================================
+WHAT IT DOES:
+
+deriveValidationState(appState):
+  Pure function
+  Input: { recipientAddress, asset, chain }
+  Output: { isAddressPresent, isAddressValid, isChainMatch, isSupportedChain }
+  No side effects
+
+updateValidationState():
+  Calls deriveValidationState(APP_STATE)
+  Updates VALIDATION_STATE via Object.assign
+  Calls applyUIGating(VALIDATION_STATE)
+  Logs if __DEBUG_VALIDATION__ enabled
+
+updateDataState():
+  async function
+  Fetches gas price + asset price (stubbed)
+  Updates DATA_STATE fields
+  Calls updateDerivedState()
+  Calls updateGasUI()
+  Calls updateAmountMirror()
+
+updateDerivedState():
+  Calls deriveGasFee() using DATA_STATE + APP_STATE
+  Updates DERIVED_STATE fields
+  Logs if __DEBUG_DERIVED__ enabled
+
+deriveGasFee():
+  Pure calculation
+  ETH: 21000 gas * gasPrice (gwei) * 1e-9
+  BTC: 140 vB * gasPrice (sat/vB) * 1e-8
+  SOL: fixed gasPrice (already in SOL)
+  Returns { estimatedGasFeeNative, estimatedGasFeeUSD }
+
+WHAT IT MUST NEVER DO:
+- Update APP_STATE from derived state (no feedback loops)
+- Trigger network calls from VALIDATION or DERIVED updates
+- Modify DOM from state update functions
+- Throw exceptions on invalid state (return null/default)
+
+BOUNDARY DEFINITION:
+
+UI LAYER:
+  Input handler updates APP_STATE.recipientAddress = value
+
+STATE LAYER:
+  updateValidationState() computes VALIDATION_STATE
+
+RENDER LAYER:
+  applyUIGating() reads VALIDATION_STATE, updates DOM
+
+
+5. MIRRORING & DERIVATION RULES
+===============================================================================
+DERIVATION CALL GRAPH:
+
+APP_STATE change:
+  → updateValidationState()
+    → deriveValidationState(APP_STATE)
+    → Object.assign(VALIDATION_STATE, ...)
+    → applyUIGating(VALIDATION_STATE)
+
+  → updateAssetLogo() (if address changed)
+    → updateDataState()
+      → fetchGasPrice + fetchAssetPrice
+      → DATA_STATE updated
+      → updateDerivedState()
+        → deriveGasFee()
+        → DERIVED_STATE updated
+      → updateGasUI()
+      → updateAmountMirror()
+
+WRITE BARRIERS: N/A (state objects are not DOM elements)
+
+OVERWRITE PROTECTION:
+Derived states use Object.assign (not replacement):
+  Object.assign(VALIDATION_STATE, newFlags); // Preserves object reference
+
+This ensures:
+  const ref = VALIDATION_STATE;
+  updateValidationState();
+  ref === VALIDATION_STATE; // true (same object)
+
+
+6. UX GUARDRAILS
+===============================================================================
+STATE VISIBILITY:
+
+Debug flags expose state to console:
+  window.__DEBUG_VALIDATION__ = true;
+  window.__DEBUG_DATA__ = true;
+  window.__DEBUG_DERIVED__ = true;
+  window.__DEBUG_LOGIC__ = true;
+
+Each updateXState() function logs table to console if debug enabled.
+
+USER-FACING STATE:
+- VALIDATION_STATE controls UI gating (slider, inputs)
+- DATA_STATE displayed in gas info row
+- DERIVED_STATE shown as fee estimate
+- APP_STATE invisible to user (internal only)
+
+TOAST FEEDBACK: None from state layer (delegated to gating subsystem)
+
+INTENTIONAL OPACITY:
+User does not see APP_STATE.inputMode directly.
+Blocker overlay position is the visual encoding of inputMode.
+
+
+7. FAILURE MODES (CONTROLLED)
+===============================================================================
+SILENT FAILURE (degraded state):
+- Fetch fails → DATA_STATE remains null, fees not shown
+- Invalid derivation input → DERIVED_STATE null, neutral state displayed
+
+ALLOWED TO FAIL SILENTLY:
+- fetchGasPrice network timeout → gasPrice null
+- fetchAssetPrice 404 → assetPriceUSD null
+- deriveGasFee with null inputs → returns null
+
+NEVER FAILS HARD:
+- No throw in derivation functions
+- Fetch errors caught and logged to console if debug enabled
+- Object.seal violations throw (this is INTENTIONAL, not silent)
+
+DEGRADED BEHAVIOR:
+
+If DATA_STATE fetch fails:
+  - Gas row shows "Gas Value = 0.1 USDT" (placeholder)
+  - Amount conversion still works (AmountEngine uses stale price)
+  - Slider still functional (readiness check may fail)
+
+If VALIDATION_STATE derivation impossible (APP_STATE corrupted):
+  - Defaults to all-false flags
+  - UI locked (slider disabled, amounts blocked)
+  - User must refresh page
+
+
+8. NON-GOALS (CRITICAL)
+===============================================================================
+DOES NOT HANDLE:
+- State persistence (no localStorage, no sessionStorage for state)
+- Undo/redo history
+- State synchronization across tabs (BroadcastChannel)
+- State diff tracking (no prev/next comparison)
+- Redux/MobX patterns (no actions, reducers, observers)
+- Schema validation (no Zod, no JSON Schema)
+- State hydration from URL params
+- Optimistic updates (network calls are fire-and-forget)
+
+WHY THESE ARE NON-GOALS:
+Current scope is single-page, single-session, ephemeral state.
+On page refresh, state resets (by design).
+On navigation away, state discarded.
+
+sessionStorage ONLY used for:
+  scannedAddress transfer (QR Scan → Send handoff)
+  Never used for APP_STATE persistence
+
+PRODUCTION REQUIREMENTS (not implemented):
+- State persistence for "send again" feature
+- URL param hydration (pre-fill address from ?to=0x...)
+- Multi-tab sync (wallet balance updates across tabs)
+
+
+===============================================================================
+END OF CONTRACT
+===============================================================================

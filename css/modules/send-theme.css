@@ -1,0 +1,4 @@
+/* Placeholder theme file to prevent 404s.
+   This imports the existing send styles.
+*/
+@import url('./send.css');

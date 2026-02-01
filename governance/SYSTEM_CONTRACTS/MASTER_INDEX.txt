@@ -1,0 +1,186 @@
+--------------------------------------------------
+--------------------------------------------------
+SYSTEM SNAPSHOT AUDIT HEADER
+--------------------------------------------------
+Snapshot Type: Implementation Reference
+
+Aligned With:
+- SEND_LIFECYCLE_CONTRACT_v1.0
+- SEND_THEME_CONTRACT_v1.0
+
+Last Alignment:
+30 January 2026, 11:17:46 AM IST (+05:30)
+
+Change Trace (High-Level):
+- Index Updated to reflect new Governance Contracts (Lifecycle & Theme)
+- System definitions and boundaries remain stable
+- Hierarchy of authority clarified for new audit standards
+
+Audit Notes:
+- This snapshot reflects the system AFTER the above alignments
+- Changes describe behavioral intent, not exact code diffs
+- Snapshot body below is preserved verbatim
+- No snapshot content was rewritten, reordered, or refactored
+--------------------------------------------------
+
+
+WEB3 PWI — SYSTEM CONTRACT MASTER INDEX
+===============================================================================
+Project: Web3 Progressive Web Interface (Send Flow Prototype)
+Location: G:\8_VS\WEB3_PWI
+Generated: 2026-01-28
+
+
+PROJECT INTENT
+===============================================================================
+WEB3 PWI is a fintech-grade UI prototype for cryptocurrency send transactions.
+
+It demonstrates:
+- String-authoritative input handling to preserve numeric precision
+- Economic flow validation without blockchain execution
+- Chain-agnostic wallet address detection (ETH/BTC/SOL)
+- Real-time USD↔Asset conversion with price data
+- UX patterns for high-stakes financial interactions
+
+This project is NOT production-ready. It is a demonstration of fintech UX
+principles, deliberately isolated from wallet SDKs, blockchain APIs, and
+transaction signing to focus on correctness of input handling and state flow.
+
+
+TRUST BOUNDARIES
+===============================================================================
+TRUSTED (Internal Authority):
+- AmountEngine: Pure math conversion logic
+- State Management: APP_STATE, VALIDATION_STATE, DATA_STATE, DERIVED_STATE
+- Input handlers: Sanitization and string preservation
+
+OBSERVED (External Read-Only):
+- Price data: Stubbed values (fetchAssetPrice, fetchGasPrice)
+- QR scan data: Normalized wallet addresses from camera/file
+- Browser DOM state: Focus, selection, contenteditable
+
+UNTRUSTED (External Dependencies):
+- jsQR library: Third-party QR parsing (vendor/CDN)
+- Gemini vendor: Third-party UI overlay component
+- User input: All keyboard/paste input treated as hostile until sanitized
+
+PROHIBITED (Not Implemented):
+- Blockchain RPC nodes
+- Wallet SDKs (MetaMask, WalletConnect)
+- Private key access
+- Transaction signing or broadcast
+
+
+SUBSYSTEM INVENTORY
+===============================================================================
+The following subsystems are documented as standalone contracts.
+Each subsystem owns specific state, enforces invariants, and defines guardrails.
+
+ORDER: Dependencies first, composition last.
+
+1. AmountEngine
+   Pure numeric conversion (USD ↔ Asset) with chain-specific precision
+
+2. Address Validation System
+   Wallet address format detection and chain inference (ETH/BTC/SOL)
+
+3. Input Authority & Gating System
+   Focus-based authority model and interaction blocking ("blocker overlay")
+
+4. State Management System
+   Four-layer state architecture (APP/VALIDATION/DATA/DERIVED) with derivation
+
+   rules
+
+5. Gas Fee Derivation System
+   Chain-specific fee calculation from stubbed price data
+
+6. Asset Detection & Theming System
+   Address-to-asset mapping and dynamic UI theming
+
+7. Transaction Readiness System
+   Pre-flight validation gate before dry-run TX object construction
+
+8. Slider Interaction System
+   Drag-to-confirm pattern with gating and visual feedback
+
+
+ARCHITECTURAL PATTERNS
+===============================================================================
+STRING AUTHORITATIVE INPUT:
+All amount inputs remain as strings until AmountEngine boundary.
+Number() conversion happens exactly once inside AmountEngine.safeParse().
+
+DERIVED STATE NEVER OVERWRITES AUTHORITATIVE:
+In 'fiat' mode: USD is authoritative, Asset is derived.
+In 'asset' mode: Asset is authoritative, USD is derived.
+updateAmountMirror() writes ONLY to derived fields, protected by focus barriers.
+
+PREVENTIVE VALIDATION (NOT CORRECTIVE):
+beforeinput blocks invalid characters before DOM insertion.
+Truncation or post-correction creates UX confusion and data loss.
+
+PASSIVE OBSERVATION PATTERN:
+VALIDATION_STATE is computed FROM APP_STATE (never set directly).
+DATA_STATE is fetched passively (never triggers execution).
+DERIVED_STATE is calculated FROM DATA_STATE + APP_STATE.
+
+NEUTRAL STATE ENCODING:
+Empty/invalid states render as "— —" (not "0" or blank).
+Prevents ambiguity between "zero value" and "awaiting input".
+
+
+READING GUIDANCE
+===============================================================================
+Subsystems are STANDALONE. Read in dependency order for first-time review:
+  1 → 2 → 4 → 3 → 5 → 6 → 7 → 8
+
+For targeted debugging:
+- Precision issues? → AmountEngine
+- Address not recognized? → Address Validation
+- Input locked unexpectedly? → Input Authority & Gating
+- State desync? → State Management
+- Gas fee wrong? → Gas Fee Derivation
+- Theme not switching? → Asset Detection & Theming
+- Slider disabled? → Transaction Readiness + Slider Interaction
+
+
+VERSION CONTROL INTEGRATION
+===============================================================================
+These snapshots are AUTHORITATIVE CONTRACT DOCUMENTATION.
+They define invariants that code changes MUST NOT violate.
+
+Before modifying code:
+1. Read relevant subsystem snapshot
+2. Verify change does not break documented invariants
+3. If invariants must change, update snapshot FIRST, get approval
+4. Implement code change
+5. Verify snapshot still accurate
+
+If snapshot contradicts code:
+- Snapshot is SOURCE OF TRUTH (not inline comments, not git history)
+- Update code to match snapshot, OR
+- Update snapshot with explicit justification and approval
+
+
+WARNING
+===============================================================================
+DO NOT:
+- Merge subsystems to reduce file count
+- Compress snapshots for readability
+- Treat snapshots as aspirational (they document CURRENT behavior)
+- Assume inline comments are sufficient (comments drift, snapshots govern)
+
+DO:
+- Update snapshots when behavior changes
+- Reference snapshot sections in code review
+- Use snapshots to onboard new engineers
+- Cite snapshot violations in bug reports
+
+
+CRITICAL REMINDER
+===============================================================================
+Subsystem snapshots are authoritative.
+This index is NOT.
+
+If a snapshot disagrees with this index, the snapshot wins.

@@ -1,0 +1,322 @@
+/* Liquid Glass Architecture */
+.liquid-overlay {
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.1);
+    /* Very translucent */
+    backdrop-filter: blur(var(--blur-2xl));
+    -webkit-backdrop-filter: blur(24px);
+    padding: 24px;
+
+    /* Animation: Liquid Spread */
+    clip-path: circle(0% at 90% 5%);
+    /* Default to top-right (Notifications) */
+    transition: clip-path var(--transition-slowest) var(--easing-liquid);
+    /* HARD FIX: Default to DEAD */
+    /* Pass through when closed */
+}
+
+/* 4. Definition for Liquid Overlay (True Premium Glass) */
+.liquid-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    opacity: 0;
+    /* Calm, expensive motion (Apple-style spring) */
+    transition: opacity 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+        transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+        backdrop-filter 0.5s ease;
+
+    display: flex;
+    flex-direction: column;
+
+    /* Purple tint matching app UI gradient - EXACT MATCH TO WALLET OVERLAY */
+    background: var(--overlay-gradient);
+
+    /* Strong blur for separation - EXACT MATCH TO WALLET OVERLAY */
+    backdrop-filter: blur(var(--blur-xl));
+    -webkit-backdrop-filter: blur(18px);
+
+    /* Animation Start State (Subtle Lift) */
+    transform: scale(0.96) translateY(8px);
+    pointer-events: none !important;
+}
+
+/* Active State: Fill the container */
+.liquid-overlay.active {
+    clip-path: circle(150% at 90% 5%);
+    pointer-events: auto !important;
+    /* Override active state transforms */
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+
+@media (prefers-color-scheme: dark) {
+    .liquid-overlay {
+        background: rgba(20, 20, 30, 0.3);
+    }
+}
+
+/* Specific Origins */
+#profileOverlay {
+    clip-path: circle(0% at 10% 5%);
+    /* Top-left start */
+}
+
+#profileOverlay.active {
+    clip-path: circle(150% at 10% 5%);
+}
+
+/* Wallet Connection Overlay (First Launch) */
+.wallet-overlay {
+    min-height: 100%;
+    /* min-height allows extension with scroll */
+    z-index: 2000;
+    /* Highest z-index */
+    background: var(--overlay-gradient);
+    backdrop-filter: blur(var(--blur-xl));
+    -webkit-backdrop-filter: blur(var(--blur-xl));
+    align-items: center;
+    justify-content: center;
+    /* HARD FIX: Default to DEAD */
+    transition: opacity var(--transition-slower) var(--easing-standard);
+    clip-path: circle(150% at 50% 50%);
+    /* Default open state */
+}
+
+/* Content Fade In (Stage 2) */
+.overlay-header,
+.notification-list,
+.profile-edit-content {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity var(--transition-medium) var(--easing-standard), transform var(--transition-medium) var(--easing-standard);
+    transition-delay: 0s;
+}
+
+.liquid-overlay.active .overlay-header,
+.liquid-overlay.active .notification-list,
+.liquid-overlay.active .profile-edit-content {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 0.3s;
+    /* Wait for liquid fill */
+}
+
+/* Headers */
+.overlay-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-top: 12px;
+}
+
+.overlay-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.overlay-actions {
+    display: flex;
+    gap: 16px;
+}
+
+/* Notification Cards (Floating Glass) */
+.notification-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+    padding-bottom: 20px;
+}
+
+.notif-card {
+    background: var(--glass-bg-medium);
+    border-radius: 20px;
+    padding: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+    transition: background 0.2s;
+}
+
+.notif-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.notif-content h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.notif-content p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.notif-time {
+    font-size: 11px;
+    color: var(--text-secondary);
+    opacity: 0.6;
+    margin-top: 8px;
+    display: block;
+}
+
+/* Profile Panel Styles */
+.profile-edit-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.profile-section {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.profile-edit-field {
+    margin-bottom: 16px;
+}
+
+.profile-edit-field:last-child {
+    margin-bottom: 24px;
+}
+
+.profile-edit-field label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.glass-input {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--glass-bg-weak);
+    color: var(--text-primary);
+    font-size: 15px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+/* Three Dot Menu & Dark Toggle */
+.menu-dots {
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 20px;
+    opacity: 0.7;
+}
+
+.dark-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.toggle-switch {
+    width: 44px;
+    height: 24px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-lg);
+    /* WHY: position: relative needed for ::after slider to position correctly */
+    position: relative;
+    transition: all var(--transition-base);
+    cursor: pointer;
+    border: 1px solid var(--glass-border);
+}
+
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: var(--radius-full);
+    transition: transform var(--transition-base);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Mock active state */
+.toggle-switch.active {
+    background: var(--eth-color);
+}
+
+.toggle-switch.active::after {
+    transform: translateX(20px);
+}
+
+/* Notification Context Menu */
+.notification-menu {
+    position: absolute;
+    top: 40px;
+    /* Offset from button */
+    right: 0;
+    width: 160px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 100;
+    transform-origin: top right;
+    transform: scale(0.9) opacity(0);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.notification-menu.active {
+    transform: scale(1) opacity(1);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.menu-item {
+    padding: 10px 12px;
+    font-size: 13px;
+    color: var(--text-primary);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.1s;
+    font-weight: 500;
+}
+
+.menu-item:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+/* Dark Mode Overrides - Handled by variables.css */

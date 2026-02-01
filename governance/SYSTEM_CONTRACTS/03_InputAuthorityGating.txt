@@ -1,0 +1,285 @@
+--------------------------------------------------
+--------------------------------------------------
+SYSTEM SNAPSHOT AUDIT HEADER
+--------------------------------------------------
+Snapshot Type: Implementation Reference
+
+Aligned With:
+- SEND_LIFECYCLE_CONTRACT_v1.0
+- SEND_THEME_CONTRACT_v1.0
+
+Last Alignment:
+30 January 2026, 11:17:46 AM IST (+05:30)
+
+Change Trace (High-Level):
+- Input blocking behavior aligned with Lifecycle entry/exit states
+- Blocker overlay persistence rules clarified for re-entry scenarios
+- No logical changes to authority transfer mechanisms
+
+Audit Notes:
+- This snapshot reflects the system AFTER the above alignments
+- Changes describe behavioral intent, not exact code diffs
+- Snapshot body below is preserved verbatim
+- No snapshot content was rewritten, reordered, or refactored
+--------------------------------------------------
+
+
+SUBSYSTEM CONTRACT: INPUT AUTHORITY & GATING SYSTEM
+===============================================================================
+Location: src/modules/send.js (functions: initAmountGating, blocker overlay logic,
+          APP_STATE.inputMode, updateAmountMirror authority branches)
+Dependencies: State Management (APP_STATE, VALIDATION_STATE)
+Dependents: AmountEngine (invoked based on authority mode)
+
+
+1. SYSTEM OVERVIEW
+===============================================================================
+Pipeline:
+User Intent → Validation Check → Authority Gate → Input Enabled/Blocked → Mode Switch
+
+Input Authority & Gating System controls WHO can edit WHICH amount input at any time.
+
+OWNS:
+- APP_STATE.inputMode ('fiat' | 'asset')
+- Blocker overlay DOM element (#amountBlocker)
+- Click/focus event interception on USD and Asset inputs
+- Toast feedback for blocked interaction attempts
+
+OBSERVES:
+- VALIDATION_STATE.isAddressValid (gates amount editing entirely)
+- document.activeElement (focus tracking for write barriers)
+
+RESPONSIBILITY:
+Enforce single-authority rule: only ONE amount input is editable at a time.
+Prevent amount editing until valid wallet address entered.
+Provide clear feedback when user attempts blocked actions.
+
+
+2. AUTHORITY MODEL
+===============================================================================
+AUTHORITY ACQUISITION:
+
+Initial State:
+- APP_STATE.inputMode = 'fiat' (USD input is authoritative)
+- Asset display is blocked (contenteditable="false")
+
+Authority Transfer:
+- User clicks blocker overlay → overlay slides to opposite side
+- inputMode toggles: 'fiat' → 'asset' or 'asset' → 'fiat'
+- Authoritative input becomes read-only from user perspective
+- Derived input becomes editable
+
+AUTHORITY STATES:
+
+'fiat' mode:
+  - USD input: authoritative (user can type)
+  - Asset display: derived (system writes, user blocked)
+  - updateAmountMirror reads USD, writes Asset
+
+'asset' mode:
+  - USD input: derived (system writes, user blocked via readonly)
+  - Asset display: authoritative (user can type via contenteditable)
+  - updateAmountMirror reads Asset, writes USD
+
+MUST NEVER:
+- Allow simultaneous editing of both inputs
+- Switch authority while user is mid-type (race condition)
+- Lose user input during authority transfer
+
+
+3. INPUT & STATE SAFETY
+===============================================================================
+VALIDATION STRATEGY: Preventive event interception (not post-correction).
+
+GATING MECHANISM:
+
+Address Gate (primary):
+If !VALIDATION_STATE.isAddressValid:
+  - Both USD and Asset inputs blocked
+  - Click → preventDefault(), blur(), toast
+  - Keydown → preventDefault(), blur(), toast
+  - Focus (tab navigation) → preventDefault(), blur(), silent
+
+Authority Gate (secondary):
+Even if address valid:
+  - Non-authoritative input blocked
+  - Blocker overlay visually covers blocked side
+  - Click on blocker → authority transfer (not toast)
+
+FORBIDDEN STATES:
+- Both inputs editable simultaneously
+- Neither input editable (prevented by always having one authoritative)
+- Blocker overlay missing (DOM integrity check)
+
+WHY PREVENTION NOT CORRECTION:
+Blocking input BEFORE characters enter DOM prevents:
+- Circular updates (USD changes → Asset changes → USD changes → loop)
+- Caret position desync
+- User confusion ("why did my typing disappear?")
+
+
+4. CORE ENGINE / LOGIC CONTRACT
+===============================================================================
+WHAT IT DOES:
+
+initAmountGating():
+  Attaches event listeners to USD and Asset inputs
+  Intercepts: click, mousedown, keydown, focus
+  Checks isUnlockable() → VALIDATION_STATE.isAddressValid
+  If not unlockable:
+    - preventDefault()
+    - blur() element
+    - showToast() if user intent (not focus event)
+
+Blocker Overlay Click Handler:
+  Toggles APP_STATE.inputMode
+  Slides overlay to opposite side
+  Updates contenteditable and readonly attributes
+  Does NOT show toast (this is intentional authority transfer)
+
+handleIntent(e):
+  Distinguishes user intent (click, keydown) from system events (focus)
+  user intent + blocked → toast feedback
+  system event + blocked → silent prevention
+
+WHAT IT MUST NEVER DO:
+- Allow input editing without address validation
+- Transfer authority during active typing (check activeElement first)
+- Show toast on focus events (spam prevention)
+- Modify amounts during authority transfer
+- Cache validation state (always check VALIDATION_STATE live)
+
+BOUNDARY DEFINITION:
+
+INTENT LAYER (user):
+  User clicks USD input
+
+GATE LAYER (this subsystem):
+  Check isAddressValid
+  If false: preventDefault, blur, toast
+  If true: check if USD is authoritative
+    If yes: allow
+    If no: blocker overlay prevents click from reaching input
+
+EXECUTION LAYER (input handlers):
+  Normal input event fires
+  Sanitization and updateAmountMirror called
+
+
+5. MIRRORING & DERIVATION RULES
+===============================================================================
+GATING AFFECTS MIRRORING:
+
+In updateAmountMirror():
+
+if (APP_STATE.inputMode === 'fiat'):
+  Read USD (authoritative, never write)
+  Write Asset (derived, protected by isAssetBeingEdited check)
+
+if (APP_STATE.inputMode === 'asset'):
+  Read Asset (authoritative, never write)
+  Write USD (derived, no protection needed in this mode)
+
+WRITE BARRIERS:
+
+const isAssetBeingEdited = document.activeElement === assetDisplay;
+
+if (inputMode === 'fiat' && !isAssetBeingEdited):
+  setVisualValue(assetDisplay, derivedValue); // Safe to write
+
+This prevents updateAmountMirror from overwriting Asset if:
+- User clicked blocker to switch to asset mode
+- System hasn't updated inputMode yet (race condition)
+- Asset display has focus
+
+OVERWRITE PROTECTION:
+Authoritative input is NEVER written to by updateAmountMirror.
+Only derived input receives writes, and only when not focused.
+
+
+6. UX GUARDRAILS
+===============================================================================
+TOAST FEEDBACK:
+
+User clicks locked amount input:
+  → "Enter wallet address first" (error toast)
+
+User clicks blocker overlay:
+  → NO toast (this is the UI for authority transfer)
+
+User tabs to locked input (focus event):
+  → Silent block, no toast (avoid spam)
+
+VISUAL FEEDBACK:
+
+Blocker overlay:
+  - Glassmorphic surface positioned over blocked half
+  - Slides left/right on click (CSS transition)
+  - Themed color matches asset (ETH blue, BTC orange, SOL green)
+
+Locked input:
+  - USD: readonly attribute + pointer-events: none
+  - Asset: contenteditable="false" + no inputmode
+
+INTENTIONAL FRICTION:
+
+Address must be valid to unlock amounts.
+Reasoning: Entering amounts for invalid recipient creates false progress.
+Better to block early than allow wasted input.
+
+Single authority enforced strictly.
+Reasoning: Prevents circular update bugs and "fighting" between USD/Asset.
+
+
+7. FAILURE MODES (CONTROLLED)
+===============================================================================
+SILENT FAILURE (neutral state):
+- Focus event on locked input → silent block
+- Blocker click during initialization lag → ignored
+
+ALLOWED TO FAIL SILENTLY:
+- Blocker overlay missing (DOM not ready) → gate checks short-circuit
+- VALIDATION_STATE not yet initialized → defaults to locked
+
+NEVER FAILS HARD:
+- Event listener errors caught by try-catch in production
+- Missing elements checked with if (!element) return
+
+DEGRADED BEHAVIOR:
+
+If blocker overlay missing:
+  - Amount inputs still blocked by focus/click interception
+  - User can't SEE which side is authoritative (poor UX but functional)
+
+If APP_STATE.inputMode corrupted (neither 'fiat' nor 'asset'):
+  - updateAmountMirror defaults to 'fiat' mode
+  - Blocker overlay position may desync (visual bug, not data corruption)
+
+
+8. NON-GOALS (CRITICAL)
+===============================================================================
+DOES NOT HANDLE:
+- Amount validation (separate: input sanitization)
+- Precision limits (separate: AmountEngine)
+- Numeric conversion (separate: AmountEngine)
+- Address validation (separate: Address Validation subsystem)
+- Gas fee display (separate: Gas Fee Derivation)
+- Transaction execution
+- Undo/redo for authority changes
+- Multi-input editing (intentionally single authority)
+- Decimal separator localization (always period)
+
+WHY THESE ARE NON-GOALS:
+Input Authority is PURELY about access control (who can edit what).
+Validation of WHAT they edit is handled by other subsystems.
+This separation allows gating logic to remain simple and testable.
+
+PRODUCTION CONSIDERATIONS (not implemented):
+- Keyboard shortcut to toggle authority (Ctrl+T)
+- Accessibility: ARIA labels for screen readers
+- Blocker overlay touch target size (mobile)
+
+
+===============================================================================
+END OF CONTRACT
+===============================================================================

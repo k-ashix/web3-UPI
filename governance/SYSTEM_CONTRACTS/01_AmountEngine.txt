@@ -1,0 +1,249 @@
+--------------------------------------------------
+--------------------------------------------------
+SYSTEM SNAPSHOT AUDIT HEADER
+--------------------------------------------------
+Snapshot Type: Implementation Reference
+
+Aligned With:
+- SEND_LIFECYCLE_CONTRACT_v1.0
+- SEND_THEME_CONTRACT_v1.0
+
+Last Alignment:
+30 January 2026, 11:17:46 AM IST (+05:30)
+
+Change Trace (High-Level):
+- Subsystem remains unaffected by recent governance updates
+- No behavioral or logical changes occurred
+- Mathematical precision and conversion logic preserved exactly
+
+Audit Notes:
+- This snapshot reflects the system AFTER the above alignments
+- Changes describe behavioral intent, not exact code diffs
+- Snapshot body below is preserved verbatim
+- No snapshot content was rewritten, reordered, or refactored
+--------------------------------------------------
+
+
+SUBSYSTEM CONTRACT: AMOUNTENGINE
+===============================================================================
+Location: src/modules/amount-engine.js
+Dependencies: None (pure module)
+Dependents: Send module (updateAmountMirror)
+
+
+1. SYSTEM OVERVIEW
+===============================================================================
+Pipeline:
+String Input → safeParse() → Numeric Calculation → Precision Rounding → Number Output
+
+AmountEngine is a PURE MATH MODULE with zero side effects.
+
+OWNS:
+- USD ↔ Asset conversion algorithms
+- Chain-specific precision rules (ETH: 6, BTC: 8, SOL: 6, Fiat: 2)
+- Safe parsing and rounding logic
+- Null handling for invalid inputs
+
+OBSERVES:
+- Nothing (no DOM, no state, no network)
+
+RESPONSIBILITY:
+Convert between fiat (USD) and native asset amounts using provided price data.
+Return null on invalid input. Never throw uncaught errors. Enforce mathematical
+precision limits to prevent floating-point corruption.
+
+
+2. AUTHORITY MODEL
+===============================================================================
+AmountEngine has NO AUTHORITY over any state.
+
+It is a STATELESS CALCULATOR invoked by Send module.
+
+AUTHORITATIVE INPUTS (caller responsibility):
+- fiatAmount (string or number from USD input)
+- assetAmount (string or number from Asset display)
+- assetPriceUSD (number from DATA_STATE)
+- chain (string: 'Ethereum' | 'Bitcoin' | 'Solana')
+
+ENGINE NEVER:
+- Reads from DOM
+- Writes to DOM
+- Modifies passed parameters
+- Caches results
+- Maintains internal state between calls
+
+CONVERSION BOUNDARY:
+String → Number happens EXACTLY ONCE inside safeParse().
+Caller must pass strings. Engine returns numbers (or null).
+
+
+3. INPUT & STATE SAFETY
+===============================================================================
+VALIDATION STRATEGY: Preventive null return (not exceptions).
+
+Invalid inputs that return null:
+- null, undefined, empty string
+- NaN after Number() conversion
+- Negative numbers (clamped to 0)
+- Zero price (division by zero guard)
+- Non-numeric strings
+
+FORBIDDEN STATES:
+- Uncaught exceptions (must return null instead)
+- Infinity or -Infinity (trapped by price <= 0 check)
+- Precision beyond chain limits (rounded via safeRound)
+
+PRECISION ENFORCEMENT:
+- Fiat: 2 decimals (currency standard)
+- ETH: 6 decimals (display limit, not on-chain limit)
+- BTC: 8 decimals (satoshi precision)
+- SOL: 6 decimals (lamport-aware display)
+
+WHY PREVENTION NOT CORRECTION:
+Returning null forces caller to handle invalid state explicitly.
+Correcting silently (e.g. treating NaN as 0) hides bugs and creates
+false confidence in derived values.
+
+
+4. CORE ENGINE / LOGIC CONTRACT
+===============================================================================
+WHAT IT DOES:
+
+deriveFromFiat(fiatAmount, assetPriceUSD, chain):
+  Formula: assetAmount = fiatAmount / assetPriceUSD
+  Rounds to chain-specific precision
+  Returns null if price invalid or amount invalid
+
+deriveFromAsset(assetAmount, assetPriceUSD):
+  Formula: fiatAmount = assetAmount * assetPriceUSD
+  Rounds to 2 decimals
+  Returns null if price invalid or amount invalid
+
+roundFiat(amount):
+  Rounds to 2 decimals using safe rounding (half-up)
+
+roundAsset(amount, chain):
+  Rounds to 6 or 8 decimals based on chain type
+
+WHAT IT MUST NEVER DO:
+- Access window, document, or any global except Number/Math
+- Call fetch() or make network requests
+- setTimeout/setInterval (async forbidden)
+- Modify PRECISION config object after module load
+- Log to console (caller handles logging)
+- Assume chain format (must handle 'Ethereum' / 'eth' / 'ETH')
+
+BOUNDARY DEFINITION:
+
+INPUT LAYER (caller):
+  Strings from contenteditable/input elements
+  "100.50" → passed to engine
+
+ENGINE LAYER (this module):
+  safeParse("100.50") → 100.5 (Number)
+  Calculate: 100.5 / 2250.50 = 0.0446644...
+  roundAsset(0.0446644, 'eth') → 0.044664
+
+OUTPUT LAYER (caller):
+  Receives 0.044664 (Number)
+  Converts to string for DOM: "0.044664"
+
+
+5. MIRRORING & DERIVATION RULES
+===============================================================================
+AmountEngine does NOT mirror or derive on its own.
+It is invoked BY updateAmountMirror() to perform one calculation per call.
+
+DERIVATION FLOW (caller responsibility):
+
+Fiat Mode:
+  1. Caller reads USD input (string)
+  2. Caller invokes deriveFromFiat(usdValue, price, chain)
+  3. Engine returns asset amount (number or null)
+  4. Caller writes to Asset display (derived field)
+
+Asset Mode:
+  1. Caller reads Asset display (string)
+  2. Caller invokes deriveFromAsset(assetValue, price)
+  3. Engine returns fiat amount (number or null)
+  4. Caller writes to USD input (derived field)
+
+ENGINE HAS NO CONCEPT OF:
+- Which field is authoritative
+- Which field is being edited
+- Focus state or user intent
+
+WRITE PROTECTION: N/A (engine never writes)
+
+
+6. UX GUARDRAILS
+===============================================================================
+AmountEngine provides NO UX feedback directly.
+
+Caller must handle:
+- Displaying null as "—
+
+ —" or error state
+- Showing precision limits via toast/message
+- Preventing user confusion when derived value is null
+
+ENGINE CONTRIBUTION TO UX:
+- Consistent rounding prevents "jumping decimals"
+- Null return allows graceful degradation (no red error text)
+- Precision limits match industry standards (user familiarity)
+
+INTENTIONAL FRICTION:
+None. Engine is maximally permissive (returns null instead of throwing).
+
+
+7. FAILURE MODES (CONTROLLED)
+===============================================================================
+SILENT FAILURE (returns null):
+- Invalid input (non-numeric, negative, empty)
+- Zero or negative price (economic nonsense)
+- NaN propagation from bad math
+
+NEVER FAILS HARD:
+- No throw statements
+- No uncaught exceptions
+- No process.exit or fatal errors
+
+CALLER RESPONSIBILITY:
+- Check for null before using result
+- Display neutral state ("— —") when null
+- Log errors if needed (engine is silent)
+
+PRECISION LOSS (acceptable):
+- Numbers beyond 6-8 decimals are rounded (not truncated)
+- Floating-point epsilon errors handled by Math.round scaling
+- Acceptable trade-off for display-layer simplicity
+
+
+8. NON-GOALS (CRITICAL)
+===============================================================================
+DOES NOT HANDLE:
+- Balance validation (no wallet integration)
+- Gas fee calculation (handled by separate subsystem)
+- Chain detection from addresses (separate subsystem)
+- Price data fetching (caller provides price)
+- Multi-currency support (USD only)
+- Locale-specific formatting (no commas, no symbols)
+- On-chain precision (18 decimals for ETH not preserved)
+- Scientific notation display (caller sanitizes)
+- Input sanitization (caller strips non-numeric chars)
+- Undo/redo history
+- Caching or memoization
+
+WHY THESE ARE NON-GOALS:
+AmountEngine is a PURE CALCULATOR.
+Adding any of these would introduce side effects, breaking testability and
+determinism. Current scope allows 100% unit test coverage with zero mocks.
+
+FUTURE EXPANSION:
+If multi-currency needed, create separate CurrencyEngine.
+Do NOT add EUR/GBP support to this engine (violates single responsibility).
+
+
+===============================================================================
+END OF CONTRACT
+===============================================================================

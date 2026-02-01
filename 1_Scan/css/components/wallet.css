@@ -1,0 +1,212 @@
+.wallet-overlay-content {
+    width: 100%;
+    min-height: 100%;
+    /* Extends with content for scroll continuity */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 32px;
+    padding-bottom: 80px;
+    /* Extra space at bottom for smooth scroll end */
+}
+
+.wallet-intro-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    text-align: center;
+    margin-top: -40px;
+    max-width: 320px;
+    width: 100%;
+}
+
+.wallet-icon-large {
+    width: 88px;
+    height: 88px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.2));
+    border-radius: var(--radius-2xl);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+    margin-bottom: 8px;
+}
+
+.wallet-icon-large img {
+    width: 48px;
+    /* Fallback size */
+    opacity: 0.8;
+}
+
+.wallet-intro-center h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-shadow: 0 2px 10px rgba(255, 255, 255, 0.5);
+}
+
+.wallet-intro-center p {
+    font-size: 16px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 24px;
+}
+
+/* Connect Button */
+.connect-main-btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: var(--radius-lg);
+    background: var(--gradient-connect-btn);
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(74, 29, 117, 0.3);
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(74, 29, 117, 0.3);
+    position: relative;
+    overflow: hidden;
+    z-index: 2;
+}
+
+/* Wallet Options Grid (Hidden Initially) */
+.wallet-options-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%;
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+    position: absolute;
+    top: 100%;
+    /* Push below initially */
+    transition: all var(--transition-slow) var(--easing-bounce);
+}
+
+.wallet-intro-center.show-options .connect-main-btn {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.8);
+}
+
+.wallet-intro-center.show-options .wallet-options-grid {
+    opacity: 1;
+    transform: translateY(-60px);
+    /* Move up into place */
+    pointer-events: auto;
+    position: relative;
+    top: auto;
+}
+
+.wallet-option-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 8px;
+    background: var(--wallet-card-bg);
+    border: 1px solid var(--wallet-card-border);
+    border-radius: 16px;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+}
+
+.wallet-option-card:hover {
+    background: var(--wallet-card-hover-bg);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.wallet-option-card img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+.wallet-option-card span {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* Network Status Row */
+.network-badge-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.network-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.net-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #00ff88;
+    /* Default Mainnet Green */
+    box-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
+}
+
+.net-dot.testnet {
+    background: #ffab00;
+    /* Amber for Testnet */
+    box-shadow: 0 0 8px rgba(255, 171, 0, 0.5);
+}
+
+.net-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.switch-btn-small {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    padding: 5px 12px;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.switch-btn-small:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+}
+
+/* Disconnect Button (Danger/Action) */
+#disconnectBtn {
+    width: 100%;
+    padding: 14px;
+    background: rgba(255, 59, 48, 0.1);
+    color: #ff3b30;
+    border: 1px solid rgba(255, 59, 48, 0.2);
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+#disconnectBtn:hover {
+    background: rgba(255, 59, 48, 0.15);
+    transform: scale(1.02);
+}
+
+/* Disconnect active removed for environment transition */

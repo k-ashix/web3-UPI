@@ -1,0 +1,296 @@
+--------------------------------------------------
+--------------------------------------------------
+SYSTEM SNAPSHOT AUDIT HEADER
+--------------------------------------------------
+Snapshot Type: Implementation Reference
+
+Aligned With:
+- SEND_LIFECYCLE_CONTRACT_v1.0
+- SEND_THEME_CONTRACT_v1.0
+
+Last Alignment:
+30 January 2026, 11:17:46 AM IST (+05:30)
+
+Change Trace (High-Level):
+- Theme derivation formalized as a pure function of asset type
+- Asset detection precedence rules hardened against new invariants
+- Theme persistence explicitly decoupled from session storage
+
+Audit Notes:
+- This snapshot reflects the system AFTER the above alignments
+- Changes describe behavioral intent, not exact code diffs
+- Snapshot body below is preserved verbatim
+- No snapshot content was rewritten, reordered, or refactored
+--------------------------------------------------
+
+
+SUBSYSTEM CONTRACT: ASSET DETECTION & THEMING SYSTEM
+===============================================================================
+Location: src/modules/send.js (functions: detectAssetFromAddress, updateAssetLogo,
+          updateTheme)
+Dependencies: Address Validation (chain detection logic)
+Dependents: State Management (sets APP_STATE.asset, chain), Gas Derivation, UI rendering
+
+
+1. SYSTEM OVERVIEW
+===============================================================================
+Pipeline:
+Address Input → Chain Detection → Asset Mapping → Logo Update → Theme Application
+
+Asset Detection & Theming System provides VISUAL FEEDBACK for detected chain type.
+
+OWNS:
+- APP_STATE.asset ('eth' | 'btc' | 'sol' | null)
+- APP_STATE.chain ('Ethereum' | 'Bitcoin' | 'Solana' | null)
+- Asset logo image src (.asset-logo img)
+- Asset unit label text (.currency-display .unit)
+- Theme class on send card (.theme-eth, .theme-btc, etc.)
+
+OBSERVES:
+- Address input value (recipientAddress)
+- Validation state (via updateValidationState trigger)
+
+RESPONSIBILITY:
+Infer blockchain type from wallet address format.
+Update UI to match detected chain (logo, colors, label).
+Trigger downstream effects (gas fetch, price fetch, amount recalculation).
+
+
+2. AUTHORITY MODEL
+===============================================================================
+ASSET DETECTION IS DERIVED FROM ADDRESS.
+
+Authority flow:
+  Address typed → detectAssetFromAddress() → APP_STATE.asset set
+
+DETECTION PRECEDENCE (order matters):
+
+1. Ethereum check first (0x prefix is unique)
+2. Bitcoin check second (1/3/bc1 prefix)
+3. Solana check third (Base58, with BTC overlap prevention)
+
+Conflict resolution:
+  Address "1ABC..." matches both BTC and SOL regex
+  → BTC wins (checked first)
+  → SOL regex has explicit rejection for '1'/'3' prefix
+
+MUST NEVER:
+- Set asset without corresponding chain
+- Cache detection results (always recompute on address change)
+- Assume asset type from previous transaction
+
+
+3. INPUT & STATE SAFETY
+===============================================================================
+VALIDATION STRATEGY: Regex-based heuristic (not cryptographic).
+
+DETECTION LOGIC:
+
+detectAssetFromAddress(address):
+  ETH: /^0x[a-fA-F0-9]{40}$/
+    Unique prefix (0x), no overlap with other chains
+
+  BTC: /^(1|3|bc1)[a-zA-Z0-9]{25,59}$/
+    Legacy (1), Script (3), Segwit (bc1)
+    Length 26-60 total
+    Note: Overlaps with SOL (both use Base58)
+
+  SOL: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
+    Base58 character set
+    Length 32-44
+    Explicit rejection: addresses starting with 'T' (TRON), '1'/'3' (BTC)
+
+NULL RETURN:
+  - Empty address → null
+  - Non-matching format → null
+  - TRON address (starts with 'T') → null
+
+FORBIDDEN STATES:
+- Asset 'eth' but chain 'Bitcoin' (prevented by atomic update)
+- Asset detected but logo not updated (updateAssetLogo does both)
+
+WHY PREVENTION NOT CORRECTION:
+Detection is format-based, not semantic.
+If address doesn't match, system cannot guess chain type.
+Null return forces UI to neutral state (placeholder logo).
+
+
+4. CORE ENGINE / LOGIC CONTRACT
+===============================================================================
+WHAT IT DOES:
+
+detectAssetFromAddress(address):
+  Returns 'eth' | 'btc' | 'sol' | null
+  Pure function (no side effects)
+
+updateAssetLogo(address):
+  1. Calls detectAssetFromAddress(address)
+  2. Updates APP_STATE.asset and APP_STATE.chain atomically
+  3. Updates .asset-logo img src:
+     eth → /1_Scan/assets/eth.png
+     btc → /1_Scan/assets/btc.png
+     sol → /1_Scan/assets/sol.png
+     null → /1_Scan/assets/chain.png (placeholder)
+  4. Updates .currency-display .unit text:
+     eth → "ETH"
+     btc → "BTC"
+     sol → "SOL"
+     null → "" (hidden)
+  5. Calls updateTheme(asset)
+  6. Triggers updateValidationState()
+  7. Triggers updateDataState() (gas + price fetch)
+  8. Triggers updateAmountMirror() (recalc amounts)
+
+updateTheme(asset):
+  Clears all theme classes from .send-card
+  Adds new theme class:
+    'eth' → .theme-eth (blue tones)
+    'btc' → .theme-btc (orange tones)
+    'sol' → .theme-sol (green tones)
+    null → .theme-default (neutral gray)
+
+WHAT IT MUST NEVER DO:
+- Validate checksum (EIP-55, Base58Check)
+- Query blockchain for address existence
+- Detect testnet vs mainnet
+- Identify token contract addresses
+- Assume chain from previous state
+
+BOUNDARY DEFINITION:
+
+INPUT: Raw address string
+DETECTION: Regex pattern match
+STATE UPDATE: APP_STATE.asset, chain
+RENDERING: Logo src, unit label, theme class
+SIDE EFFECTS: Validation, data fetch, amount recalc
+
+
+5. MIRRORING & DERIVATION RULES
+===============================================================================
+ASSET IS DERIVED FROM ADDRESS (non-authoritative).
+
+DERIVATION TRIGGERS:
+
+1. Address input event:
+   adjustAddressFit() → updateAssetLogo(address)
+
+2. QR scan completion:
+   enforceAddressState() → updateAssetLogo(scannedAddress)
+
+3. Address clear:
+   drainAmountVisuals() → resetSendState() → updateAssetLogo('')
+
+DERIVATION CASCADE:
+
+updateAssetLogo(address)
+  → detectAssetFromAddress(address)
+  → APP_STATE.asset = 'eth'
+  → APP_STATE.chain = 'Ethereum'
+  → updateTheme('eth')
+  → updateValidationState()
+    → VALIDATION_STATE.isChainMatch updated
+  → updateDataState()
+    → fetchGasPrice('Ethereum')
+    → fetchAssetPrice('eth')
+    → DATA_STATE updated
+    → updateDerivedState()
+    → updateGasUI()
+  → updateAmountMirror()
+    → AmountEngine.deriveFromFiat(..., 'Ethereum')
+    → Asset display updated with new precision
+
+WRITE BARRIERS: None (asset detection never writes to input)
+
+OVERWRITE PROTECTION:
+Asset change resets amounts (intentional).
+Old amounts are invalid for new chain (ETH→BTC price ratio differs).
+
+
+6. UX GUARDRAILS
+===============================================================================
+VISUAL FEEDBACK:
+
+Logo change (immediate):
+  Empty → chain.png (grayscale placeholder)
+  0x... → eth.png (blue gradient)
+  bc1... → btc.png (orange gradient)
+  5eyQ... → sol.png (green gradient)
+
+Theme transition (smooth):
+  CSS transition on background-color, border-color
+  Card background shifts to chain color
+  Blocker overlay tints with chain color
+
+Unit label (dynamic):
+  Before detection: hidden
+  After detection: "ETH" / "BTC" / "SOL"
+  After clear: hidden again
+
+NEUTRAL STATE:
+If address invalid or empty:
+  - Logo → chain.png
+  - Unit label → hidden
+  - Theme → .theme-default
+  - Amounts → "— —"
+
+INTENTIONAL FEEDBACK:
+User types "0x..." → instant ETH logo (no delay)
+User clears address → instant revert to placeholder
+
+
+7. FAILURE MODES (CONTROLLED)
+===============================================================================
+SILENT FAILURE (neutral state):
+- Unrecognized format → asset null, placeholder shown
+- Partial address (user mid-type) → asset null until complete
+
+ALLOWED TO FAIL SILENTLY:
+- Logo image 404 → broken image icon (browser default)
+- Theme class not in CSS → no visual change (degraded but functional)
+
+NEVER FAILS HARD:
+- No throw in detectAssetFromAddress (returns null)
+- Missing DOM elements checked (if (!logoImg) return)
+
+DEGRADED BEHAVIOR:
+
+If logo images missing:
+  - Detection logic still works
+  - APP_STATE.asset still set correctly
+  - Amounts still calculate correctly
+  - Only visual feedback missing
+
+If theme CSS missing:
+  - Detection logic still works
+  - Logo still updates
+  - Only color scheme missing
+
+
+8. NON-GOALS (CRITICAL)
+===============================================================================
+DOES NOT HANDLE:
+- ENS resolution (vitalik.eth → 0x...)
+- Unstoppable Domains (.crypto, .nft)
+- Testnet address detection (Sepolia, Goerli, Testnet BTC)
+- Token contract addresses (ERC-20 vs native ETH)
+- Multi-sig wallet detection
+- Smart contract vs EOA distinction
+- Address book / contact naming
+- Recently used addresses
+- Address validation beyond format
+
+WHY THESE ARE NON-GOALS:
+Asset detection is FORMAT-ONLY for instant UX feedback.
+Name resolution requires network calls (handled by wallet SDK in production).
+Testnet support intentionally omitted (mainnet UI only).
+
+PRODUCTION REQUIREMENTS (not implemented):
+- ENS resolver integration (web3.eth.ens.getAddress)
+- Testnet chain toggle (Ethereum Mainnet vs Sepolia)
+- Token selection (ERC-20 list with logos)
+- Address book (save/load named addresses)
+
+
+===============================================================================
+END OF CONTRACT
+===============================================================================

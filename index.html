@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web3 Wallet Home</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Core CSS (Order Matters) -->
+    <link rel="stylesheet" href="css/core/variables.css">
+    <link rel="stylesheet" href="css/core/reset.css">
+    <link rel="stylesheet" href="css/core/base.css">
+
+    <!-- Layout & Components -->
+    <link rel="stylesheet" href="css/layout/layout.css">
+    <link rel="stylesheet" href="css/components/buttons.css">
+    <link rel="stylesheet" href="css/components/overlays.css">
+    <link rel="stylesheet" href="css/components/wallet.css">
+
+    <!-- Effects -->
+    <link rel="stylesheet" href="css/effects/animations.css">
+</head>
+
+<body>
+    <div class="glass-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="user-profile">
+                <div class="avatar-ring">
+                    <img src="assets/avatar.png" alt="User" class="avatar" id="headerAvatar">
+                </div>
+                <div class="greeting-box">
+                    <h1 id="greetingTitle">Hey, Max</h1>
+                    <p>How are You , Today</p>
+                </div>
+            </div>
+            <button class="notification-btn">
+                <img src="assets/bell.png" alt="Notifications">
+            </button>
+        </header>
+
+        <!-- Identity Pill (Carousel) -->
+        <section class="identity-section">
+            <div class="identity-carousel" id="chainCarousel">
+                <!-- Dynamic Content Injected Here -->
+            </div>
+            <!-- Pagination Dots (Optional visually, or handled by swipe) -->
+        </section>
+
+        <!-- Action Grid -->
+        <section class="action-grid">
+            <button class="action-btn" data-action="send">
+                <span class="btn-text">Send</span>
+            </button>
+            <button class="action-btn" data-action="swap">
+                <span class="btn-text">Swap</span>
+            </button>
+            <button class="action-btn" data-action="bridge">
+                <span class="btn-text">Bridge</span>
+            </button>
+            <button class="action-btn" data-action="gas">
+                <span class="btn-text">Gas</span>
+            </button>
+        </section>
+
+        <!-- Balance & Bottom Dock -->
+        <section class="dock-container">
+            <div class="balance-strip">
+                <span class="balance-label">Balance</span>
+
+                <div class="balance-controls">
+                    <!-- Mechanical Privacy Shutter -->
+                    <div class="shutter-container" id="privacyShutter">
+                        <div class="shutter-door"></div>
+                        <span class="balance-value" id="balanceValue">≈ $4000</span>
+                        <div class="shutter-overlay">
+                            <span class="shutter-grip"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="balance-extras">
+                    <div class="color-tag"></div>
+                    <button class="copy-small">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="dock-main">
+                <button class="dock-btn utility-left">
+                    <img src="assets/Recent Transaction.png" alt="Recent Transaction" class="utility-icon">
+                </button>
+
+                <div class="scan-btn-wrapper">
+                    <button class="scan-btn">
+                        <img src="assets/scan.png" alt="Scan">
+                    </button>
+                </div>
+
+                <button class="dock-btn utility-right">
+                    <img src="assets/Blockchain History.png" alt="Blockchain History" class="utility-icon">
+                </button>
+            </div>
+        </section>
+        <!-- Profile Overlay (Liquid Glass) -->
+        <div class="liquid-overlay" id="profileOverlay">
+            <div class="overlay-header">
+                <h2>Profile</h2>
+                <div class="overlay-actions">
+                    <button class="save-btn" id="saveProfileBtn" style="display: none;">Save</button>
+                    <button class="close-btn" onclick="closeOverlays()">✕</button>
+                </div>
+            </div>
+            <div class="profile-edit-content">
+                <div class="profile-section">
+                    <div class="profile-edit-field">
+                        <label>Display Name</label>
+                        <input type="text" class="glass-input" id="inputName" value="Max" />
+                    </div>
+                </div>
+
+                <div class="profile-section">
+                    <div class="profile-edit-field">
+                        <label>Primary ENS</label>
+                        <input type="text" class="glass-input" id="inputENS" value="max.eth" readonly
+                            style="opacity: 0.7;" />
+                    </div>
+                    <div class="profile-edit-field">
+                        <label>Wallet Address (ETH)</label>
+                        <input type="text" class="glass-input" id="inputAddress" value="0x29...C5c0" readonly
+                            style="opacity: 0.7; font-family: monospace;" />
+                    </div>
+                    <div class="profile-edit-field">
+                        <label>Email Support</label>
+                        <input type="email" class="glass-input" id="inputEmail" value="max@web3.com" />
+                    </div>
+                </div>
+
+                <div class="profile-section">
+                    <div class="dark-toggle" id="darkModeToggle">
+                        <span style="font-weight: 500; font-size: 14px; color: var(--text-primary);">Dark Mode</span>
+                        <div class="toggle-switch"></div>
+                    </div>
+                </div>
+
+                <div class="profile-section"
+                    style="padding: 0; background: transparent; border: none; margin-bottom: 24px;">
+                    <button class="save-btn" id="saveProfileBtn" style="width: 100%; display: none;">Save
+                        Changes</button>
+                </div>
+
+                <div class="profile-section" style="border: none; background: transparent; padding: 0;">
+                    <button id="disconnectBtn"
+                        style="width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(255, 59, 48, 0.3); background: rgba(255, 59, 48, 0.1); color: #ff3b30; font-weight: 600; cursor: pointer;">
+                        Disconnect Wallet
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Overlay (Liquid Glass) -->
+        <div class="liquid-overlay" id="notificationOverlay">
+            <div class="overlay-header">
+                <h2>Notifications</h2>
+                <div class="overlay-actions">
+                    <div class="notification-anchor" style="position: relative;">
+                        <button class="icon-btn menu-dots">•••</button>
+                        <!-- Notification Context Menu (Stub) -->
+                        <div class="notification-menu" id="notificationMenu">
+                            <div class="menu-item" data-action="mark-read">Mark all as read</div>
+                            <div class="menu-item" data-action="clear-all">Clear notifications</div>
+                        </div>
+                    </div>
+                    <button class="close-btn" onclick="closeOverlays()">✕</button>
+                </div>
+            </div>
+            <div class="notification-list" id="notificationList">
+                <!-- Rendered by NotificationSection.js -->
+            </div>
+        </div>
+        <!-- Wallet Connection Overlay (First Launch Gate) -->
+        <div class="wallet-overlay" id="walletOverlay">
+            <div class="wallet-overlay-content">
+                <div class="wallet-intro-center">
+                    <div class="wallet-icon-large">
+                        <img src="assets/wallet-icon-glass.png" onerror="this.src='assets/scan.png'" alt="Wallet">
+                    </div>
+                    <h1>Connect Wallet</h1>
+                    <p>Unlock the full Web3 experience</p>
+
+                    <button class="connect-main-btn" id="connectMainBtn">
+                        Connect Wallet
+                    </button>
+
+                    <!-- Hidden Options (Revealed on click) -->
+                    <div class="wallet-options-grid" id="walletOptionsGrid">
+                        <button class="wallet-option-card" data-type="ethereum">
+                            <img src="assets/eth.png" alt="ETH">
+                            <span>Ethereum</span>
+                        </button>
+                        <button class="wallet-option-card" data-type="solana">
+                            <img src="assets/sol.png" alt="SOL">
+                            <span>Solana</span>
+                        </button>
+                        <button class="wallet-option-card" data-type="walletconnect">
+                            <img src="assets/wallet-connect.png" onerror="this.style.display='none'" alt="WC">
+                            <span>WalletConnect</span>
+                        </button>
+                    </div>
+                </div>
+
+                <button class="skip-btn-corner" id="skipWalletBtn">
+                    Skip for now
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blur Overlay for Interactions -->
+    <div class="overlay-blur" id="overlayBlur"></div>
+
+    <script type="module" src="src/app/main.js"></script>
+</body>
+
+</html>

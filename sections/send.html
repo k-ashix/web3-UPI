@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Money UI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- send money header -->
+        <header class="send-money-header">
+            <button class="icon-btn" id="sendBackBtn"><i class="fa-solid fa-arrow-left"></i></button>
+            <h1 class="send-money-text">Send Money</h1>
+            <div style="flex: 1;"></div>
+            <img src="./assets/gemini-icon.png" id="open-gemini" alt="Gemini"
+                style="width: 24px; height: 24px; cursor: pointer; display: block; pointer-events: auto; z-index: 50;" />
+        </header>
+
+        <!-- send layout -->
+        <div class="send-layout">
+            <!-- send card (Structural) + default theme -->
+            <div class="send-card theme-default">
+                <div class="send-card__inner">
+                    <div class="send-card__address-section">
+                        <!-- Asset logo -->
+                        <div class="asset-logo">
+                            <img src="./assets/chain.png" alt="Chain Logo" />
+                        </div>
+
+                        <!-- Address input cluster: address + chips -->
+                        <div class="address-input-cluster">
+                            <!-- Address input field -->
+                            <div class="address-input-field">
+                                <input type="text" class="address-input" id="recipientAddress"
+                                    placeholder="Enter wallet address" spellcheck="false">
+                            </div>
+
+                            <!-- Asset chips row -->
+                            <div class="asset-chips-row">
+                                <!-- chain chip -->
+                                <div class="chain-chip">Mainnet</div>
+
+                                <!-- asset chip -->
+                                <div class="asset-chip">Bitcoin</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="send-card__amount-section">
+                        <!-- amount input group -->
+                        <div class="amount-input-group">
+                            <!-- amount input card -->
+                            <div class="amount-input-card">
+                                <!-- Blocker Overlay (Moved here for correct anchoring) -->
+                                <div class="amount-blocker-overlay" id="amountBlocker">
+                                    <div class="amount-themed-surface"></div>
+                                </div>
+
+                                <div class="amount-header">
+                                    <span class="label">Enter Amount</span>
+                                </div>
+                                <div class="amount-inputs">
+                                    <div class="currency-input usd">
+                                        <span class="currency-symbol">$</span>
+                                        <input type="number" value="399" id="usdIndex" placeholder="0">
+                                    </div>
+                                    <div class="currency-display btc">
+                                        <span class="value">$ 0.03</span> <span class="unit">BTC</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- gas info row -->
+                            <div class="gas-info-row">
+                                <div class="gas-themed-overlay"></div>
+                                <div class="gas-info-half">
+                                    <span class="label">Current Gas</span>
+                                </div>
+                                <div class="gas-vertical-separator"></div>
+                                <div class="gas-info-half">
+                                    <span class="value">Gas Value = 0.1 USDT</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- theme overlay (optional overlay) -->
+                    <div class="send-card__theme-overlay"></div>
+                </div>
+            </div>
+
+            <!-- slider section -->
+            <div class="slider-section">
+                <!-- slider background glass -->
+                <div class="slider-background-glass">
+                    <div class="glass-layer--base"></div>
+                    <div class="glass-layer--blur"></div>
+                </div>
+
+                <!-- slider wrapper -->
+                <div class="slider-wrapper">
+                    <!-- slide button -->
+                    <div class="slide-button" id="sliderContainer">
+                        <div class="slider-text">Slide To Continue</div>
+                        <div class="slide-button__knob" id="sliderKnob">
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- [PHASE 1 CLEANUP] DISABLED: Authority consolidated to 1_Scan -->
+        <!-- <script src="vendor/gemini/gemini-overlay.js" type="module"></script> -->
+        <script src="script.js"></script>
+</body>
+
+</html>

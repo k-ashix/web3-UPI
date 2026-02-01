@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan QR Code</title>
+</head>
+
+<body>
+    <div class="scan-container">
+        <!-- Header -->
+        <header class="scan-header">
+            <button class="icon-btn" id="scanBackBtn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+            </button>
+            <h1 class="scan-title">Scan QR Code</h1>
+            <div style="width: 24px;"></div>
+        </header>
+
+        <!-- Camera Preview Area -->
+        <div class="camera-section">
+            <div class="camera-preview-wrapper">
+                <video id="cameraVideo" autoplay playsinline></video>
+                <canvas id="scanCanvas" style="display: none;"></canvas>
+
+                <!-- Scan Frame Overlay -->
+                <div class="scan-frame">
+                    <div class="corner top-left"></div>
+                    <div class="corner top-right"></div>
+                    <div class="corner bottom-left"></div>
+                    <div class="corner bottom-right"></div>
+                </div>
+            </div>
+
+            <!-- Controls Below Camera -->
+            <div class="camera-controls">
+                <button class="control-pill" id="flashBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                    </svg>
+                    <span>Flash</span>
+                </button>
+
+                <button class="control-pill" id="galleryBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <path d="M21 15l-5-5L5 21" />
+                    </svg>
+                    <span>Gallery</span>
+                </button>
+            </div>
+
+            <!-- Message Display -->
+            <div class="message-display" id="messageDisplay"></div>
+        </div>
+
+        <!-- Hidden File Input -->
+        <input type="file" id="fileInput" accept="image/*" style="display: none;">
+    </div>
+</body>
+
+</html>

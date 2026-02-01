@@ -1,0 +1,23 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Outfit', sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    /* No scrollbar on body */
+}
+
+/* Scrollbar Cleanse */
+::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+    display: none;
+}

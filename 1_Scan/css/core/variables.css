@@ -1,0 +1,185 @@
+:root {
+    --bg-color: #f2f4f8;
+    /* Light grey-blue background from reference */
+    --glass-bg: rgba(255, 255, 255, 0.25);
+    --glass-border: rgba(255, 255, 255, 0.5);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    --blur-amount: 12px;
+
+    --text-primary: #1a1a1a;
+    --text-secondary: #666;
+
+    /* Chain Colors */
+    --eth-color: #627eea;
+    --eth-bg: #8c9eff;
+    --btc-color: #f7931a;
+    --btc-bg: #ffb74d;
+    --sol-color: #14f195;
+    --sol-bg: #9945ff;
+    /* Gradient usually, but fallback */
+
+    --shutter-color: #a0aec0;
+
+    /* WHY: Glass effect variations - different transparency levels for layering depth */
+    --glass-bg-light: rgba(255, 255, 255, 0.3);
+    --glass-bg-medium: rgba(255, 255, 255, 0.15);
+    --glass-bg-strong: rgba(255, 255, 255, 0.4);
+    --glass-bg-weak: rgba(255, 255, 255, 0.1);
+    --glass-bg-very-weak: rgba(255, 255, 255, 0.05);
+    --glass-border-light: rgba(255, 255, 255, 0.4);
+    --glass-border-medium: rgba(255, 255, 255, 0.2);
+    --glass-border-weak: rgba(255, 255, 255, 0.1);
+    --glass-border-strong: rgba(255, 255, 255, 0.6);
+    --glass-border-very-weak: rgba(255, 255, 255, 0.05);
+
+    /* WHY: Dark overlays for shadows and blur backgrounds */
+    --dark-overlay-light: rgba(0, 0, 0, 0.02);
+    --dark-overlay-medium: rgba(0, 0, 0, 0.05);
+    --dark-overlay-strong: rgba(0, 0, 0, 0.08);
+    --dark-overlay-darker: rgba(0, 0, 0, 0.1);
+    --dark-overlay-shadow: rgba(0, 0, 0, 0.3);
+
+    /* WHY: Blur amounts for different glass effects - stronger blur = more separation */
+    --blur-sm: 4px;
+    --blur-md: 8px;
+    --blur-base: 12px;
+    --blur-lg: 14px;
+    --blur-xl: 18px;
+    --blur-2xl: 24px;
+
+    /* WHY: Border radius values for consistent roundedness across components */
+    --radius-xs: 6px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-2xl: 24px;
+    --radius-3xl: 30px;
+    --radius-full: 50%;
+
+    /* WHY: Transition durations and easing for smooth, consistent animations */
+    --transition-fast: 0.1s;
+    --transition-base: 0.2s;
+    --transition-medium: 0.3s;
+    --transition-slow: 0.4s;
+    --transition-slower: 0.5s;
+    --transition-slowest: 0.7s;
+    --easing-standard: ease;
+    --easing-smooth: cubic-bezier(0.25, 1, 0.5, 1);
+    --easing-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --easing-spring: cubic-bezier(0.25, 0.8, 0.25, 1);
+    --easing-liquid: cubic-bezier(0.65, 0, 0.35, 1);
+    --easing-overlay: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+    /* WHY: Common gradients used across multiple components */
+    --gradient-container: linear-gradient(135deg, #eef2f3 0%, #e0e7ff 100%);
+    --gradient-action-btn: linear-gradient(135deg, rgba(140, 100, 200, 0.4), rgba(140, 100, 200, 0.7));
+    --gradient-dock: linear-gradient(180deg, rgba(200, 180, 230, 0.25) 0%, rgba(130, 60, 180, 0.75) 40%, rgba(100, 40, 150, 0.95) 100%);
+    --gradient-balance-strip: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+    --gradient-scan-wrapper: linear-gradient(135deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.2));
+    --gradient-dock-btn: linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.3));
+    --gradient-shutter: linear-gradient(to bottom, #9f7aea 0%, #7c3aed 100%);
+    --gradient-connect-btn: linear-gradient(135deg, #1a0b2e 0%, #4a1d75 100%);
+    --gradient-avatar-ring: linear-gradient(45deg, #ff9a9e, #fad0c4);
+
+    /* WHY: Overlay backgrounds with purple tint matching app UI */
+    --overlay-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, rgba(200, 180, 230, 0.3) 50%, rgba(130, 100, 180, 0.35) 100%);
+
+    /* WHY: Danger/destructive action color */
+    --danger-color: #ff3b30;
+    --danger-bg: rgba(255, 59, 48, 0.1);
+    --danger-border: rgba(255, 59, 48, 0.3);
+
+    /* SEMANTIC BINDINGS (Refactor Phase) */
+    --action-text-color: #1a052b;
+    --wallet-card-bg: rgba(255, 255, 255, 0.6);
+    --wallet-card-border: rgba(255, 255, 255, 0.4);
+    --wallet-card-hover-bg: rgba(255, 255, 255, 0.9);
+    --skip-btn-bg: rgba(255, 255, 255, 0.1);
+    --skip-btn-hover-bg: rgba(255, 255, 255, 0.3);
+    --skip-btn-color: var(--text-secondary);
+    --skip-btn-hover-color: var(--text-primary);
+    --balance-label-color: #1a052b;
+    --balance-value-color: #000;
+    --shutter-bg: rgba(0, 0, 0, 0.08);
+    --shutter-border: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Mode System Preference & Toggle Support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: #050505;
+        /* AMOLED Black */
+        --glass-bg: rgba(255, 255, 255, 0.03);
+        /* Ultra subtle base */
+        --glass-border: rgba(255, 255, 255, 0.15);
+        /* Crisp border for definition */
+        --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        --text-primary: #ffffff;
+        --text-secondary: #cccccc;
+        --shutter-color: #4a5568;
+
+        /* Gradient Overrides - Deep & Rich */
+        --gradient-container: linear-gradient(135deg, #0a0a0a 0%, #120520 100%);
+        --gradient-dock: linear-gradient(180deg, rgba(30, 15, 45, 0.6) 0%, rgba(20, 10, 30, 0.9) 100%);
+        --gradient-action-btn: linear-gradient(135deg, rgba(140, 100, 200, 0.2), rgba(140, 100, 200, 0.4));
+        --gradient-balance-strip: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+        --gradient-connect-btn: linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%);
+        --overlay-gradient: linear-gradient(180deg, rgba(10, 10, 12, 0.8) 0%, rgba(20, 10, 30, 0.9) 100%);
+
+        /* Glass Variant Overrides (AMOLED Optimization) */
+        --glass-bg-light: rgba(255, 255, 255, 0.05);
+        --glass-bg-medium: rgba(255, 255, 255, 0.08);
+        --glass-bg-strong: rgba(255, 255, 255, 0.12);
+        /* Interactive elements pop */
+
+        /* Semantic Overrides */
+        --action-text-color: #ffffff;
+        --wallet-card-bg: rgba(30, 30, 35, 0.8);
+        --wallet-card-border: rgba(255, 255, 255, 0.1);
+        --wallet-card-hover-bg: rgba(60, 60, 70, 0.9);
+        --skip-btn-bg: rgba(255, 255, 255, 0.05);
+        --skip-btn-hover-bg: rgba(255, 255, 255, 0.15);
+        --skip-btn-color: #ffffff;
+        --skip-btn-hover-color: #ffffff;
+        --balance-label-color: #9ca3af;
+        --balance-value-color: #fff;
+        --shutter-bg: rgba(255, 255, 255, 0.05);
+        --shutter-border: rgba(255, 255, 255, 0.1);
+    }
+}
+
+/* Force Dark Mode Class (Matches Media Query) */
+body.dark-mode {
+    --bg-color: #050505;
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.15);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+    --shutter-color: #4a5568;
+
+    --gradient-container: linear-gradient(135deg, #0a0a0a 0%, #120520 100%);
+    --gradient-dock: linear-gradient(180deg, rgba(30, 15, 45, 0.6) 0%, rgba(20, 10, 30, 0.9) 100%);
+    --gradient-action-btn: linear-gradient(135deg, rgba(140, 100, 200, 0.2), rgba(140, 100, 200, 0.4));
+    --gradient-balance-strip: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    --gradient-connect-btn: linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%);
+    --overlay-gradient: linear-gradient(180deg, rgba(10, 10, 12, 0.8) 0%, rgba(20, 10, 30, 0.9) 100%);
+
+    --glass-bg-light: rgba(255, 255, 255, 0.05);
+    --glass-bg-medium: rgba(255, 255, 255, 0.08);
+    --glass-bg-strong: rgba(255, 255, 255, 0.12);
+
+    --action-text-color: #ffffff;
+    --wallet-card-bg: rgba(30, 30, 35, 0.8);
+    --wallet-card-border: rgba(255, 255, 255, 0.1);
+    --wallet-card-hover-bg: rgba(60, 60, 70, 0.9);
+    --skip-btn-bg: rgba(255, 255, 255, 0.05);
+    --skip-btn-hover-bg: rgba(255, 255, 255, 0.15);
+    --skip-btn-color: #ffffff;
+    --skip-btn-hover-color: #ffffff;
+    --balance-label-color: #9ca3af;
+    --balance-value-color: #fff;
+    --shutter-bg: rgba(255, 255, 255, 0.05);
+    --shutter-border: rgba(255, 255, 255, 0.1);
+}

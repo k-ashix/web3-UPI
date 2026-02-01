@@ -1,0 +1,285 @@
+--------------------------------------------------
+--------------------------------------------------
+SYSTEM SNAPSHOT AUDIT HEADER
+--------------------------------------------------
+Snapshot Type: Implementation Reference
+
+Aligned With:
+- SEND_LIFECYCLE_CONTRACT_v1.0
+- SEND_THEME_CONTRACT_v1.0
+
+Last Alignment:
+30 January 2026, 11:17:46 AM IST (+05:30)
+
+Change Trace (High-Level):
+- Subsystem remains unaffected by recent governance updates
+- No behavioral or logical changes occurred
+- Price fetching and fee calculation logic preserved exactly
+
+Audit Notes:
+- This snapshot reflects the system AFTER the above alignments
+- Changes describe behavioral intent, not exact code diffs
+- Snapshot body below is preserved verbatim
+- No snapshot content was rewritten, reordered, or refactored
+--------------------------------------------------
+
+
+SUBSYSTEM CONTRACT: GAS FEE DERIVATION SYSTEM
+===============================================================================
+Location: src/modules/send.js (functions: fetchGasPrice, fetchAssetPrice, deriveGasFee,
+          updateDerivedState, updateGasUI)
+Dependencies: State Management (DATA_STATE, DERIVED_STATE)
+Dependents: Transaction Readiness (checks fee availability)
+
+
+1. SYSTEM OVERVIEW
+===============================================================================
+Pipeline:
+Asset Change → Fetch Price Data → Calculate Gas Fee → Update Display
+
+Gas Fee Derivation System provides ESTIMATED transaction costs in native and USD.
+
+OWNS:
+- DATA_STATE.gasPrice, gasUnit (fetched)
+- DATA_STATE.assetPriceUSD (fetched)
+- DERIVED_STATE.estimatedGasFeeNative (calculated)
+- DERIVED_STATE.estimatedGasFeeUSD (calculated)
+- Gas info row DOM element (.gas-info-row .value)
+
+OBSERVES:
+- APP_STATE.chain (triggers new fetch on change)
+- APP_STATE.asset (triggers new fetch on change)
+
+RESPONSIBILITY:
+Fetch current gas prices for active chain.
+Calculate estimated transaction fee using chain-specific formulas.
+Display fee in both native asset and USD for user reference.
+Fail silently if fetch unavailable (display placeholder).
+
+
+2. AUTHORITY MODEL
+===============================================================================
+NO AUTHORITATIVE USER INPUT.
+
+This subsystem is fully automated (no user control over gas price).
+
+DATA FLOW:
+
+1. Asset/chain changes:
+   → updateAssetLogo() calls updateDataState()
+
+2. updateDataState():
+   → fetchGasPrice(chain) (stubbed, returns hardcoded values)
+   → fetchAssetPrice(asset) (stubbed, returns hardcoded values)
+   → Updates DATA_STATE.gasPrice, assetPriceUSD
+
+3. updateDerivedState():
+   → deriveGasFee() calculates fees using DATA_STATE
+   → Updates DERIVED_STATE.estimatedGasFeeNative, estimatedGasFeeUSD
+
+4. updateGasUI():
+   → Reads DERIVED_STATE
+   → Writes to .gas-info-row .value DOM element
+
+MUST NEVER:
+- Allow user to edit gas price (no "custom gas" feature)
+- Cache stale prices across chain switches
+- Assume prices are fresh (always check lastUpdated timestamp)
+
+
+3. INPUT & STATE SAFETY
+===============================================================================
+VALIDATION STRATEGY: Stubbed fetch with realistic fallback values.
+
+STUBBED FETCH LOGIC:
+
+fetchGasPrice(chain):
+  Ethereum → { price: 15, unit: 'gwei' }
+  Bitcoin → { price: 12, unit: 'sat/vB' }
+  Solana → { price: 0.000005, unit: 'SOL' }
+  null/unknown → null
+
+fetchAssetPrice(asset):
+  eth → 2250.50
+  btc → 42000.00
+  sol → 95.20
+  null/unknown → 0
+
+FORBIDDEN STATES:
+- Negative gas price (filtered by stub)
+- Zero or negative asset price (filtered by stub)
+- Infinity in fee calculation (prevented by null checks)
+
+WHY PREVENTION NOT CORRECTION:
+Stubbed values are realistic but NOT REAL.
+Production would fetch from API (Etherscan, Blockchain.info, Helius).
+Current implementation prevents execution with fake data (dry-run only).
+
+
+4. CORE ENGINE / LOGIC CONTRACT
+===============================================================================
+WHAT IT DOES:
+
+deriveGasFee():
+  Pure calculation using DATA_STATE
+
+  Ethereum:
+    nativeFee = 21000 (gas limit) * gasPrice (gwei) * 1e-9 (gwei→ETH)
+    usdFee = nativeFee * assetPriceUSD
+
+  Bitcoin:
+    nativeFee = 140 (vB estimate) * gasPrice (sat/vB) * 1e-8 (sat→BTC)
+    usdFee = nativeFee * assetPriceUSD
+
+  Solana:
+    nativeFee = gasPrice (already in SOL)
+    usdFee = nativeFee * assetPriceUSD
+
+  Returns: { estimatedGasFeeNative, estimatedGasFeeUSD } or null
+
+updateGasUI():
+  Formats fee as string:
+    "{gasPrice} {gasUnit} (≈ ${feeUSD})"
+    Example: "15 gwei (≈ $0.71)"
+
+  Edge case: if feeUSD < 0.01 → displays "< $0.01"
+
+WHAT IT MUST NEVER DO:
+- Use real gas estimation APIs (this is a stub)
+- Assume gas limit (21000 for ETH is SIMPLE TRANSFER only, not contract)
+- Calculate EIP-1559 base fee + priority fee (uses legacy gas price)
+- Fetch mempool data for dynamic pricing
+- Apply gas estimation multipliers (no 1.1x safety margin)
+
+BOUNDARY DEFINITION:
+
+FETCH LAYER:
+  Stubbed Promise returns hardcoded values
+
+DERIVATION LAYER:
+  deriveGasFee() performs chain-specific math
+
+RENDER LAYER:
+  updateGasUI() formats and writes to DOM
+
+
+5. MIRRORING & DERIVATION RULES
+===============================================================================
+GAS DATA IS FULLY DERIVED (never user input).
+
+DERIVATION TRIGGERS:
+
+1. Asset change:
+   updateAssetLogo() → updateDataState() → fetch new prices
+
+2. Manual refresh (not implemented):
+   Would call updateDataState() directly
+
+DERIVATION SEQUENCE:
+
+fetchGasPrice + fetchAssetPrice (parallel)
+  → DATA_STATE.gasPrice, assetPriceUSD updated
+  → updateDerivedState() called
+    → deriveGasFee() computes fees
+    → DERIVED_STATE.estimatedGasFeeNative, estimatedGasFeeUSD updated
+  → updateGasUI() called
+    → Gas info row DOM updated
+
+WRITE BARRIERS: N/A (no user input to protect)
+
+OVERWRITE PROTECTION:
+DATA_STATE fields overwritten on each fetch (intentional).
+No history tracking (latest price always wins).
+
+
+6. UX GUARDRAILS
+===============================================================================
+DISPLAY FORMATTING:
+
+Gas row shows:
+  "Current Gas"
+  "{price} {unit} (≈ ${usdFee})"
+
+Example displays:
+  "15 gwei (≈ $0.71)"
+  "12 sat/vB (≈ $0.03)"
+  "0.000005 SOL (≈ < $0.01)"
+
+EDGE CASES:
+
+USD fee < $0.01:
+  Display "< $0.01" instead of "$0.00" (avoids "free" illusion)
+
+Gas price null:
+  Display placeholder from HTML: "Gas Value = 0.1 USDT"
+  (Intentional: shows users system is loading, not broken)
+
+INTENTIONAL OPACITY:
+User does NOT see:
+  - Fetch errors (silent failure)
+  - Stub vs real API distinction (production-ready UI)
+  - Gas limit assumptions (abstracted)
+
+
+7. FAILURE MODES (CONTROLLED)
+===============================================================================
+SILENT FAILURE (degraded display):
+- Fetch timeout → gasPrice null, placeholder shown
+- Chain not recognized → deriveGasFee returns null, placeholder shown
+- Asset price 0 → usdFee null, native fee shown without USD
+
+ALLOWED TO FAIL SILENTLY:
+- Network unreachable (stub never fails, but production API would)
+- API rate limit exceeded
+- Invalid chain parameter
+
+NEVER FAILS HARD:
+- No throw in deriveGasFee (returns null instead)
+- Fetch errors caught and logged if __DEBUG_DATA__ enabled
+- DOM update failures logged, not thrown
+
+DEGRADED BEHAVIOR:
+
+If DATA_STATE.gasPrice null:
+  - Gas row shows placeholder "Gas Value = 0.1 USDT"
+  - DERIVED_STATE.estimatedGasFeeUSD null
+  - Transaction readiness check may fail (no fee data)
+
+If DERIVED_STATE.estimatedGasFeeUSD null:
+  - Gas row shows native fee only: "15 gwei"
+  - User sees fee exists, but USD conversion unavailable
+
+
+8. NON-GOALS (CRITICAL)
+===============================================================================
+DOES NOT HANDLE:
+- Real gas estimation APIs (Etherscan, Infura, Alchemy)
+- EIP-1559 (base fee, priority fee, max fee)
+- Dynamic gas pricing (mempool-based recommendations)
+- Gas limit estimation (assumes simple transfer: 21k ETH, 140vB BTC, 5k lamports SOL)
+- Contract interaction gas (ERC-20 transfer ~65k gas not supported)
+- Gas price history charts
+- User-selected gas tiers (slow/normal/fast)
+- Nonce management
+- Gas token optimization (Chi, GST2)
+
+WHY THESE ARE NON-GOALS:
+Current scope is DISPLAY-LAYER estimate for simple transfers.
+Production wallet would use:
+  - eth_estimateGas RPC call
+  - EIP-1559 fee market data
+  - Smart contract bytecode analysis for gas limit
+
+Stub implementation allows UI development without blockchain dependency.
+
+PRODUCTION REQUIREMENTS (not implemented):
+- Etherscan API integration (gasPrice, gasFee)
+- EIP-1559 support (baseFeePerGas from latest block)
+- Gas limit estimation (eth_estimateGas)
+- Fee tier selection (low/medium/high)
+- Gas price polling (update every 15 seconds)
+
+
+===============================================================================
+END OF CONTRACT
+===============================================================================

@@ -1,0 +1,154 @@
+/* -------------------------------------------------------------------------- */
+/* BASE COMPOSITION CLASSES - Phase 2A                                        */
+/* WHY: Define reusable foundations without applying them yet                 */
+/* -------------------------------------------------------------------------- */
+
+/* WHY: Shared foundation for glassmorphic containers
+   Provides common glass effect styling (blur, transparency, borders)
+   NOT APPLIED YET - reserved for future Phase 2B */
+.glass-base,
+.header,
+.balance-strip {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--blur-base));
+    -webkit-backdrop-filter: blur(var(--blur-base));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+}
+
+/* WHY: Shared foundation for all interactive glass buttons
+   Provides common flex centering, cursor, transition behavior
+   PHASE 2B: Applied to .notification-btn, .dock-btn, .action-btn */
+.btn-base,
+.notification-btn,
+.dock-btn,
+.action-btn,
+.scan-btn,
+.connect-main-btn,
+.close-btn,
+.wallet-option-card,
+.icon-btn,
+.copy-icon-btn {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+    outline: none;
+
+    /* Interaction */
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    transition: transform var(--transition-fast) var(--easing-spring),
+        box-shadow var(--transition-fast),
+        background-color var(--transition-base),
+        color var(--transition-base),
+        opacity var(--transition-base),
+        width var(--transition-medium);
+}
+
+.btn-base:active,
+.dock-btn:active,
+.action-btn:active,
+.scan-btn:active,
+.connect-main-btn:active,
+.close-btn:active,
+.wallet-option-card:active,
+.icon-btn:active,
+.copy-icon-btn:active {
+    transform: scale(0.92);
+}
+
+/* Pseudo-element Spotlight Effect */
+.btn-base::after,
+.dock-btn::after,
+.action-btn::after,
+.scan-btn::after,
+.connect-main-btn::after,
+.close-btn::after,
+.wallet-option-card::after,
+.icon-btn::after,
+.copy-icon-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    /* Simulate a spotlight at tap position -> Fallback to centered flash */
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+}
+
+.btn-base:active::after,
+.dock-btn:active::after,
+.action-btn:active::after,
+.scan-btn:active::after,
+.connect-main-btn:active::after,
+.close-btn:active::after,
+.wallet-option-card:active::after,
+.icon-btn:active::after,
+.copy-icon-btn:active::after {
+    opacity: 1;
+    transition: opacity 0s;
+}
+
+/* WHY: Shared foundation for overlay systems (liquid-overlay, wallet-overlay)
+   Establishes positioning, z-index, and pointer-events contract
+   PHASE 2C: Applied to .liquid-overlay, .wallet-overlay */
+.overlay-base,
+.liquid-overlay,
+.wallet-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    pointer-events: none !important;
+    /* WHY: Default to non-interactive - MUST be explicitly activated */
+    display: flex;
+    flex-direction: column;
+}
+
+.overlay-base.active,
+.liquid-overlay.active,
+.wallet-overlay.active {
+    opacity: 1;
+    pointer-events: auto !important;
+    /* WHY: Only active overlays intercept clicks */
+}
+
+/* -------------------------------------------------------------------------- */
+/* GLOBAL INTERACTION CONTRACT (CRITICAL SAFETY NET)                          */
+/* -------------------------------------------------------------------------- */
+
+/* 1. Base UI Layers - MUST NEVER BLOCK CLICKS */
+body,
+#app,
+.home-screen,
+.header,
+.dock-container,
+.dock-main,
+.screen,
+.section {
+    pointer-events: auto !important;
+    position: relative;
+    /* Ensure stacking context but not blocking */
+}
+
+/* 2. Overlay Layers - DEFAULT to DEAD (Click-through) */
+.wallet-overlay,
+.liquid-overlay,
+.modal-overlay {
+    pointer-events: none !important;
+}
+
+/* 3. Active Overlays - ALIVE */
+.wallet-overlay.active,
+.liquid-overlay.active,
+.modal-overlay.active {
+    pointer-events: auto !important;
+}

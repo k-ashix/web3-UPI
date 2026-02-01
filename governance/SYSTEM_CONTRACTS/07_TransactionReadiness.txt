@@ -1,0 +1,313 @@
+--------------------------------------------------
+--------------------------------------------------
+SYSTEM SNAPSHOT AUDIT HEADER
+--------------------------------------------------
+Snapshot Type: Implementation Reference
+
+Aligned With:
+- SEND_LIFECYCLE_CONTRACT_v1.0
+- SEND_THEME_CONTRACT_v1.0
+
+Last Alignment:
+30 January 2026, 11:17:46 AM IST (+05:30)
+
+Change Trace (High-Level):
+- Validation gates aligned with active Lifecycle state definitions
+- Readiness check timing clarified relative to Lifecycle events
+- No internal validation logic modified
+
+Audit Notes:
+- This snapshot reflects the system AFTER the above alignments
+- Changes describe behavioral intent, not exact code diffs
+- Snapshot body below is preserved verbatim
+- No snapshot content was rewritten, reordered, or refactored
+--------------------------------------------------
+
+
+SUBSYSTEM CONTRACT: TRANSACTION READINESS SYSTEM
+===============================================================================
+Location: src/modules/send.js (functions: validateInputs, deriveTransactionReadiness,
+          endDrag transaction gate logic)
+Dependencies: State Management (all states), Address Validation
+Dependents: Slider Interaction (uses readiness check)
+
+
+1. SYSTEM OVERVIEW
+===============================================================================
+Pipeline:
+User Action → Readiness Check → Validation Gate → Dry-Run TX Object → UI Feedback
+
+Transaction Readiness System provides PRE-FLIGHT VALIDATION before transaction preparation.
+
+OWNS:
+- validateInputs() return value (validation result object)
+- deriveTransactionReadiness() return value (readiness check)
+- TX_DRY_RUN object construction (not execution)
+
+OBSERVES:
+- VALIDATION_STATE (address validity, chain match)
+- DATA_STATE (gas price, asset price availability)
+- DERIVED_STATE (fee calculation availability)
+- DOM inputs (address length, amount > 0)
+
+RESPONSIBILITY:
+Block transaction preparation if critical data missing.
+Surface validation errors via toast messages.
+Construct dry-run TX object for logging/debugging.
+Do NOT execute transactions (wallet SDK not integrated).
+
+
+2. AUTHORITY MODEL
+===============================================================================
+READINESS IS DERIVED (not authoritative).
+
+VALIDATION GATES (must pass ALL):
+
+Gate 1: Address Validation
+  - VALIDATION_STATE.isAddressValid must be true
+  - Blocks: Invalid format, unsupported chain, chain mismatch
+
+Gate 2: Amount Validation
+  - parseFloat(amountInput.value) > 0
+  - Blocks: Empty amount, zero amount, negative amount, NaN
+
+Gate 3: Gas Data Availability
+  - DATA_STATE.gasPrice !== null
+  - Blocks: Fetch failed, network unavailable
+
+Gate 4: Fee Calculation Availability
+  - DERIVED_STATE.estimatedGasFeeUSD !== null
+  - Blocks: Price data missing, derivation failed
+
+Gate 5: Recipient Presence
+  - APP_STATE.recipientAddress !== null
+  - Blocks: Empty address field (redundant with Gate 1, defensive check)
+
+MUST NEVER:
+- Execute actual transaction (no wallet.sendTransaction)
+- Submit to blockchain
+- Sign transaction
+- Modify wallet balance
+
+
+3. INPUT & STATE SAFETY
+===============================================================================
+VALIDATION STRATEGY: Multi-gate defensive checks.
+
+VALIDATION HIERARCHY:
+
+validateInputs() (basic):
+  1. DOM elements exist
+  2. Address length >= 26 characters
+  3. Amount > 0 (numeric parse check)
+
+  Returns: { valid: boolean, msg: string }
+
+deriveTransactionReadiness() (comprehensive):
+  Checks ALL state layers:
+    - isAddressValid from VALIDATION_STATE
+    - gasPrice from DATA_STATE
+    - estimatedGasFeeUSD from DERIVED_STATE
+    - recipientAddress from APP_STATE
+
+  Returns: { isReady: boolean, reason: string }
+
+FORBIDDEN EXECUTION STATES:
+- TX prepared without valid address
+- TX prepared without gas price
+- TX prepared without amount
+- TX submitted to blockchain (not implemented)
+
+WHY PREVENTION NOT CORRECTION:
+Readiness check runs BEFORE tx object construction.
+If any gate fails, user sees toast, slider resets.
+Better to block early than construct invalid TX.
+
+
+4. CORE ENGINE / LOGIC CONTRACT
+===============================================================================
+WHAT IT DOES:
+
+validateInputs():
+  Reads DOM:
+    - #recipientAddress
+    - #usdIndex (or asset display in asset mode)
+  Checks:
+    - address.length >= 26
+    - parseFloat(amount) > 0
+  Returns: { valid, msg }
+
+deriveTransactionReadiness():
+  Reads state objects:
+    - VALIDATION_STATE.isAddressValid
+    - DATA_STATE.gasPrice
+    - DERIVED_STATE.estimatedGasFeeUSD
+    - APP_STATE.recipientAddress
+  Computes: isReady = all checks pass
+  Returns: { isReady, reason }
+
+TX_DRY_RUN construction:
+  {
+    chain: APP_STATE.chain,
+    asset: APP_STATE.asset,
+    recipient: APP_STATE.recipientAddress,
+    amountInputMode: APP_STATE.inputMode,
+    source: APP_STATE.source,
+    estimatedGasNative: DERIVED_STATE.estimatedGasFeeNative,
+    estimatedGasUSD: DERIVED_STATE.estimatedGasFeeUSD,
+    timestamp: Date.now()
+  }
+
+  Logged to console if __DEBUG_TX__ enabled
+  Never sent to network
+
+WHAT IT MUST NEVER DO:
+- Call wallet.sendTransaction()
+- Sign transaction with private key
+- Broadcast to mempool
+- Deduct balance from user account
+- Modify blockchain state
+- Store transaction hash
+
+BOUNDARY DEFINITION:
+
+UI LAYER (slider):
+  User drags to 90% threshold
+
+VALIDATION LAYER (this subsystem):
+  validateInputs() + deriveTransactionReadiness()
+
+EXECUTION LAYER (not implemented):
+  Would call wallet SDK here
+  Would show confirmation modal
+  Would sign + broadcast
+
+
+5. MIRRORING & DERIVATION RULES
+===============================================================================
+READINESS IS COMPUTED ON-DEMAND (not cached).
+
+INVOCATION POINTS:
+
+1. Slider drag end (endDrag function):
+   if (currentX > maxDrag * 0.9):
+     check = validateInputs()
+     if (!check.valid): abort, show toast
+     readiness = deriveTransactionReadiness()
+     if (!readiness.isReady): abort, show toast
+     constructTX()
+
+DERIVATION SEQUENCE:
+
+validateInputs()
+  → { valid: false, msg: "Enter a valid amount" }
+  → resetSlider(), showToast(msg, true)
+  → STOP
+
+deriveTransactionReadiness()
+  → { isReady: false, reason: "Missing: Gas Data" }
+  → resetSlider(), showToast("Network Unavailable", true)
+  → STOP
+
+Both pass:
+  → TX_DRY_RUN = { ... }
+  → debugTxLog('Dry Run Prepared', TX_DRY_RUN)
+  → showToast("Transaction Prepared (Dry Run)", false)
+
+WRITE BARRIERS: N/A (read-only validation)
+
+OVERWRITE PROTECTION: N/A (no state mutation)
+
+
+6. UX GUARDRAILS
+===============================================================================
+TOAST FEEDBACK:
+
+Validation failures:
+  - "Enter a valid wallet address" (address < 26 chars)
+  - "Enter a valid amount" (amount <= 0 or NaN)
+  - "Network Unavailable or Invalid Data" (readiness failed)
+
+Success (dry-run):
+  - "Transaction Prepared (Dry Run)" (green checkmark toast)
+
+SLIDER RESET:
+All validation failures:
+  → resetSlider() called
+  → Slider snaps back to start
+  → Fill bar resets to 0%
+  → Text reverts to "Slide To Continue"
+
+INTENTIONAL FRICTION:
+Slider disabled if !isAddressValid (upstream gate).
+Even if slider enabled, readiness check provides second gate.
+Prevents double-spend / accidental submission (if TX execution were enabled).
+
+
+7. FAILURE MODES (CONTROLLED)
+===============================================================================
+SILENT FAILURE (degraded state):
+- Gas price unavailable → readiness.isReady = false
+- Fee USD null → readiness.isReady = false
+
+ALLOWED TO FAIL SILENTLY:
+- Debug logging disabled → TX_DRY_RUN not logged
+
+NEVER FAILS HARD:
+- No throw in validateInputs or deriveTransactionReadiness
+- Missing DOM elements return { valid: false, msg: 'System Error' }
+- State object fields null handled gracefully
+
+DEGRADED BEHAVIOR:
+
+If DATA_STATE.gasPrice null:
+  - deriveTransactionReadiness() returns isReady: false
+  - Toast: "Network Unavailable or Invalid Data"
+  - User cannot proceed
+  - Must refresh page or wait for data fetch retry
+
+If DERIVED_STATE.estimatedGasFeeUSD null:
+  - deriveTransactionReadiness() returns isReady: false
+  - Same degraded behavior
+
+
+8. NON-GOALS (CRITICAL)
+===============================================================================
+DOES NOT HANDLE:
+- Actual transaction execution
+- Wallet connection (MetaMask, WalletConnect)
+- Transaction signing
+- Nonce management
+- Gas limit estimation beyond display
+- Balance validation (insufficient funds check)
+- Slippage protection
+- Mempool monitoring
+- Transaction tracking / confirmation
+- Error recovery (failed TX, dropped TX)
+
+WHY THESE ARE NON-GOALS:
+Current scope is DRY-RUN ONLY.
+TX_DRY_RUN object is a LOGGING ARTIFACT, not executable.
+Production wallet would:
+  - Check balance via eth_getBalance
+  - Estimate gas via eth_estimateGas
+  - Sign via personal_sign or wallet_signTransaction
+  - Broadcast via eth_sendRawTransaction
+  - Monitor via eth_getTransactionReceipt
+
+This system validates INPUTS for UX feedback, not execution safety.
+
+PRODUCTION REQUIREMENTS (not implemented):
+- Wallet SDK integration (ethers.js, web3.js, @solana/web3.js)
+- Balance check before TX submission
+- Nonce fetching (eth_getTransactionCount)
+- Gas limit estimation (not hardcoded 21000)
+- EIP-1559 fee market support
+- Transaction confirmation modal
+- Pending transaction state
+- Error handling (rejected, reverted, dropped)
+
+
+===============================================================================
+END OF CONTRACT
+===============================================================================

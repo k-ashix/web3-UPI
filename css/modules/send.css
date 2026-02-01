@@ -1,0 +1,1154 @@
+:root {
+    --bg-color: #ffffff;
+    --card-gradient-top: #FDE0B4;
+    /* Reduced intensity ~5% */
+    --card-gradient-bottom: #FFB765;
+    /* Reduced intensity, calmer */
+    --slider-green: #57E534;
+    --text-dark: #1a1a1a;
+    --font-serif: 'Playfair Display', serif;
+    --font-sans: 'Inter', sans-serif;
+    --cream-card: #FFFCF5;
+    --light-surface: rgba(255, 255, 255, 0.5);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ========================================
+   GLOBAL GLASS SYSTEM (LOCKED)
+======================================== */
+/* Removed unused .glass-surface utility - dead code */
+
+body {
+    background-color: #f5f5f5;
+    font-family: var(--font-serif);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    color: var(--text-dark);
+    padding: 0;
+    margin: 0;
+}
+
+.app-container {
+    width: 100%;
+    /* max-width: 390px; Removed to ensure overlay fits shell exactly if shell is narrower, or kept? User said "width 100%". Keeping max-width might break "100%" instruction if parent is wider. I will follow 'width: 100%' strictly. */
+    /* Wait, the existing code has max-width: 390px. The user said "position as overlay (absolute, top/left 0, width/height 100%, z-index 3000)". I should probably remove max-width to be safe, or keep it if it fits the design. The prompt says "Do NOT restructure DOM" and "Preserve UI". The shell is max-width 400px. If I set width 100%, it fits the parent. */
+    /* Let's be precise. */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 3000;
+    /* Layer 3: Send Overlay */
+
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    /* position: relative; Removed */
+    overflow: hidden;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.15);
+}
+
+@media (max-width: 768px) {
+    body {
+        align-items: flex-start;
+    }
+
+    .app-container {
+        max-width: 100%;
+        height: auto;
+        min-height: 100vh;
+    }
+}
+
+/* ========================================
+   SEND MONEY HEADER
+======================================== */
+.send-money-header {
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    z-index: 10;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #888;
+    margin-right: 1rem;
+    cursor: pointer;
+}
+
+.send-money-text {
+    font-family: var(--font-serif);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #000;
+}
+
+/* ========================================
+   SEND LAYOUT
+======================================== */
+.send-layout {
+    flex: 1;
+    position: relative;
+    padding: 1.5rem 0 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ========================================
+   SEND CARD
+   Primary transaction input card
+======================================== */
+.send-card {
+    /* Base Color + Glass Overlay Model */
+    background-color: var(--card-base, #fff);
+    background-image: var(--card-glass);
+    border-radius: 36px;
+    padding: 1.4rem 0 6rem;
+    height: auto;
+    box-shadow: var(--card-shadow);
+    position: relative;
+    margin: 0;
+    width: 100%;
+}
+
+.send-card__inner {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    width: 100%;
+}
+
+/* Mock themes removed - Replaced by theme.css */
+
+/* ========================================
+   CHAIN MODIFIERS (SUBTLE CONTEXT)
+   Uses .send-card__theme-overlay to tint
+ ======================================== */
+/* ========================================
+   CHAIN MODIFIERS (SUBTLE CONTEXT)
+   Uses .send-card__theme-overlay to tint
+   NOW EXTENDED: Defines --theme-wash variables for Amount Blocker
+ ======================================== */
+/* Default Mainnet: No tint or very subtle warm light */
+.send-card.chain-mainnet .send-card__theme-overlay {
+    display: block;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Extended Theme Variables - DEFAULT */
+.send-card.theme-default {
+    --theme-wash: rgba(185, 154, 217, 0.15);
+    /* Soft Purple Wash */
+    --theme-wash-strong: rgba(185, 154, 217, 0.35);
+    /* Deepened Purple */
+}
+
+/* Testnet: Cautionary yellow tint (very subtle) */
+.send-card.chain-testnet .send-card__theme-overlay {
+    display: block;
+    background: rgba(255, 235, 59, 0.08);
+}
+
+/* Base: Brand blue tint */
+.send-card.chain-base .send-card__theme-overlay {
+    display: block;
+    background: rgba(0, 82, 255, 0.06);
+}
+
+/* Extended Theme Variables - ETH (Blue) */
+.send-card.theme-eth {
+    --theme-wash: rgba(122, 159, 255, 0.15);
+    /* Soft Blue Wash */
+    --theme-wash-strong: rgba(122, 159, 255, 0.35);
+    /* Deepened Blue */
+}
+
+/* Arbitrum: Deep blue/gray tint */
+.send-card.chain-arbitrum .send-card__theme-overlay {
+    display: block;
+    background: rgba(44, 55, 75, 0.08);
+}
+
+/* Extended Theme Variables - BTC (Orange) */
+.send-card.theme-btc {
+    --theme-wash: rgba(255, 183, 101, 0.15);
+    /* Soft Orange Wash */
+    --theme-wash-strong: rgba(255, 183, 101, 0.35);
+    /* Deepened Orange */
+}
+
+/* Extended Theme Variables - SOL (Purple) */
+.send-card.theme-sol {
+    --theme-wash: rgba(153, 69, 255, 0.15);
+    /* Soft Sol Purple */
+    --theme-wash-strong: rgba(153, 69, 255, 0.35);
+    /* Deepened Sol Purple */
+}
+
+/* ========================================
+   ADDRESS SECTION (LOCKED CONTENT)
+======================================== */
+.send-card__address-section {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    /* Fixed logo slot width */
+    grid-template-rows: auto 1fr;
+    gap: 0;
+    column-gap: 0;
+    /* Handled by padding/margin */
+    flex: none;
+    height: 120px;
+    /* Fixed height safety */
+
+    /* STEP 3: Stacking context - content above overlay */
+    position: relative;
+    z-index: 2;
+}
+
+/* ========================================
+   AMOUNT SECTION
+======================================== */
+.send-card__amount-section {
+    flex: none;
+    padding: 0 2rem;
+    display: flex;
+    flex-direction: column;
+
+    /* STEP 3: Stacking context - content above overlay */
+    position: relative;
+    z-index: 2;
+}
+
+/* ========================================
+   ASSET LOGO
+======================================== */
+.asset-logo {
+    grid-column: 1;
+    grid-row: 1;
+    width: 72px;
+    height: 72px;
+    flex-shrink: 0;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+    margin-left: 0.5rem;
+    align-self: center;
+    margin-top: 6px;
+    transform: translateX(0.5px);
+    /* Neutral fallback background - only visible when img fails or not loaded */
+    background: rgba(200, 200, 200, 0.15);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.asset-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    position: relative;
+    z-index: 10;
+    /* High z-index ensures loaded images always sit above placeholder */
+    display: block;
+    opacity: 1;
+}
+
+/* Neutral placeholder - shows by default, sits behind any loaded image */
+.asset-logo::after {
+    content: '?';
+    position: absolute;
+    font-size: 24px;
+    color: rgba(0, 0, 0, 0.25);
+    font-weight: 600;
+    z-index: 0;
+    pointer-events: none;
+    /* Visible by default - hidden when ANY image source is present */
+    opacity: 1;
+}
+
+/* Hide placeholder when img has any src attribute (not empty string) */
+.asset-logo:has(img[src]:not([src=""]))::after {
+    opacity: 0;
+}
+
+/* ========================================
+   ADDRESS INPUT CLUSTER
+======================================== */
+.address-input-cluster {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-left: 0;
+    padding-right: 1.5rem;
+    /* Internal padding */
+    align-self: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    /* Prevent spill */
+}
+
+/* ========================================
+   ADDRESS INPUT FIELD
+======================================== */
+.address-input-field {
+    background: var(--light-surface);
+    padding: 0 0.9rem;
+    border-radius: 14px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06),
+        0 2px 4px rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    display: flex;
+    align-items: center;
+    height: 38px;
+    /* Fixed height */
+    width: 100%;
+    max-width: 100%;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+}
+
+/* Validation States (Phase 3B) */
+/* Neutral Validation State (Industry Standard) */
+.address-input-field.input-validated {
+    background: var(--input-bg, rgba(255, 255, 255, 0.65));
+    border: 1.5px solid rgba(0, 0, 0, 0.12);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.35),
+        0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Optional Theme Mapping */
+/* If theme accent exists, we mix it slightly, but keep it subtle */
+.address-input-field.input-validated {
+    border-color: color-mix(in srgb, var(--theme-accent, rgba(0, 0, 0, 0.12)) 35%, transparent);
+}
+
+/* Explicit Neutrality for Invalid/Empty */
+.address-input-field.input-invalid,
+.address-input-field.input-empty {
+    background: inherit;
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: none;
+}
+
+.address-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: var(--font-serif);
+    font-weight: 800;
+    font-size: 0.8rem;
+    /* Legible */
+    color: #2a2a2a;
+    padding: 0;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.address-input::placeholder {
+    color: #999;
+    font-weight: 500;
+    opacity: 0.7;
+}
+
+.address-input:read-only {
+    cursor: default;
+    opacity: 0.8;
+    color: #4a4a4a;
+}
+
+.address-input-field .address-text {
+    font-family: var(--font-serif);
+    font-weight: 800;
+    font-size: 0.7rem;
+    color: #2a2a2a;
+    line-height: 1.3;
+}
+
+/* ========================================
+   ASSET CHIPS ROW
+======================================== */
+.asset-chips-row {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    width: 100%;
+}
+
+/* ========================================
+   CHAIN CHIP
+======================================== */
+.chain-chip {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.65);
+    padding: 0 0.4rem;
+    border-radius: 12px;
+    text-align: center;
+    font-family: var(--font-serif);
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #2a2a2a;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05),
+        0 1px 2px rgba(255, 255, 255, 0.4) inset;
+    height: 32px;
+    /* Fixed height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.chain-chip b {
+    font-weight: 400;
+}
+
+/* ========================================
+   ASSET CHIP
+======================================== */
+.asset-chip {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.65);
+    padding: 0 0.4rem;
+    border-radius: 12px;
+    text-align: center;
+    font-family: var(--font-serif);
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #2a2a2a;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05),
+        0 1px 2px rgba(255, 255, 255, 0.4) inset;
+    height: 32px;
+    /* Fixed height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.asset-chip b {
+    font-weight: 400;
+}
+
+/* ========================================
+   AMOUNT INPUT GROUP
+======================================== */
+.amount-input-group {
+    width: 100%;
+    position: relative;
+    top: 3.0rem;
+    /* Margins removed; layout handled by amount section */
+}
+
+/* ========================================
+   AMOUNT INPUT CARD
+======================================== */
+.amount-input-card {
+    background-color: var(--amount-base, #F0F0F0);
+    background-image: var(--amount-glass);
+    border-radius: 20px 20px 0 0;
+    padding: 0;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08),
+        0 2px 8px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    position: relative;
+    /* Context for glass layer */
+}
+
+/* Layer 2: Internal Glass */
+.amount-input-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    /* Global Glass Definition */
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.amount-header,
+.amount-inputs {
+    position: relative;
+    z-index: 1;
+    /* Ensure content sits above glass */
+}
+
+.amount-header {
+    padding: 0.5rem 1.1rem 0.5rem;
+    /* Moved up, increased spacing below */
+}
+
+.amount-header .label {
+    font-family: var(--font-serif);
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #777;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+    /* Lock metrics */
+}
+
+.amount-inputs {
+    display: flex;
+    align-items: baseline;
+    /* Ensure same baseline */
+    padding: 0 1.1rem 1rem;
+    /* Removed top padding (4px up) */
+    margin-top: -2px;
+    /* Slight negative margin (2px up) = Total 6px up */
+}
+
+/* ========================================
+   AMOUNT BLOCKER OVERLAY (Slider)
+   Concept: Overlay represents the INACTIVE (Blocked) side.
+   Default Position: RIGHT (Asset Blocked)
+======================================== */
+.amount-blocker-overlay {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 50%;
+    left: 50%;
+    /* Default: Right Side Blocked */
+    z-index: 5;
+    /* Above inputs visually */
+    cursor: pointer;
+    transition: left 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    /* Touch Target & Visual Container */
+}
+
+.amount-themed-surface {
+    width: 100%;
+    height: 100%;
+    border-radius: 0 20px 0 0;
+    /* Use Dynamic Theme Wash */
+    background: var(--theme-wash, var(--glass-overlay));
+    /* NON-NEGOTIABLE: No Blur */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+    transition: border-radius 0.3s ease, background 0.3s ease, -webkit-mask-image 0.3s ease, mask-image 0.3s ease;
+
+    /* Edge Softening via Mask */
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 12px, black 100%);
+    mask-image: linear-gradient(to right, transparent 0%, black 12px, black 100%);
+}
+
+/* Active/Press State (Immediate Feedback) */
+.amount-blocker-overlay:active .amount-themed-surface {
+    transform: scale(0.99);
+    /* No transition on transform = Instant response */
+}
+
+/* Position: LEFT (Fiat Blocked) */
+.amount-blocker-overlay.position-left {
+    left: 0;
+}
+
+.amount-blocker-overlay.position-left .amount-themed-surface {
+    border-radius: 20px 0 0 0;
+    /* Top-Left rounded only */
+
+    /* Edge Softening direction flip */
+    -webkit-mask-image: linear-gradient(to left, transparent 0%, black 12px, black 100%);
+    mask-image: linear-gradient(to left, transparent 0%, black 12px, black 100%);
+}
+
+/* State: LOCKED (Double Click) */
+.amount-blocker-overlay.state-locked .amount-themed-surface {
+    /* Stronger Theme Wash for Disabled State */
+    background: var(--theme-wash-strong, rgba(200, 200, 200, 0.2));
+
+    /* Inner Lock Ring */
+    box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.05);
+    cursor: not-allowed;
+
+    /* REMOVE FEATHERING when LOCKED (Authoritative State) */
+    -webkit-mask-image: none;
+    mask-image: none;
+}
+
+/* Cursor change when Locked? */
+.amount-blocker-overlay.state-locked {
+    cursor: default;
+}
+
+.currency-input {
+    flex: 1;
+    display: flex;
+    align-items: baseline;
+    /* Align symbol and input */
+    border-right: none;
+    /* Removed vertical separator */
+    padding-right: 12px;
+}
+
+.currency-input.usd .currency-symbol {
+    font-size: 1.6rem;
+    font-weight: 600;
+    /* Fintech bold */
+    margin-right: 6px;
+    color: #1a1a1a;
+    transform: translateY(-2px);
+    /* Micro-adjustment for input baseline */
+    line-height: 1;
+    /* Lock metrics */
+}
+
+.currency-input input {
+    border: none;
+    background: transparent;
+    font-size: 1.9rem;
+    font-family: var(--font-serif);
+    width: 100%;
+    font-weight: 600;
+    /* Fintech bold */
+    outline: none;
+    color: #1a1a1a;
+    line-height: 1;
+    /* Lock metrics */
+}
+
+/* Remove number input spinners */
+.currency-input input[type="number"]::-webkit-inner-spin-button,
+.currency-input input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.currency-input input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.currency-display.btc {
+    flex: 1;
+    text-align: right;
+    padding-left: 12px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: baseline;
+    white-space: nowrap;
+}
+
+.currency-display .value {
+    font-size: 1.6rem;
+    /* Matched size closer to input visual */
+    font-weight: 600;
+    /* Fintech bold */
+    margin-right: 4px;
+    color: #1a1a1a;
+    font-family: var(--font-serif);
+    line-height: 1;
+    /* Lock metrics */
+}
+
+.currency-display .unit {
+    font-size: 1.0rem;
+    font-weight: 600;
+    /* Fintech bold */
+    color: #1a1a1a;
+    font-family: var(--font-serif);
+    line-height: 1;
+    /* Lock metrics */
+}
+
+/* ========================================
+   GAS INFO ROW
+======================================== */
+/* ========================================
+   GAS INFO ROW
+   Refactored for Split Layout + Sliding Overlay
+======================================== */
+.gas-info-row {
+    /* Neutral Base Container */
+    background-color: rgba(255, 255, 255, 0.4);
+    background-image: none;
+    /* Clear previous glass var if set */
+    padding: 0;
+    /* Constraints handled by children */
+    display: flex;
+    align-items: stretch;
+    font-family: var(--font-serif);
+    font-size: 0.7rem;
+    border-top: 1px solid var(--amount-border);
+    border-radius: 0 0 20px 20px;
+    color: #4a4a4a;
+    position: relative;
+    overflow: hidden;
+    /* Clips the overlay */
+}
+
+/* Layer 4: Global Micro-Glass (Preserved) */
+.gas-info-row::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* NEW: Themed Sliding Overlay (Half Width) */
+.gas-themed-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    background: var(--amount-base);
+    /* Inherits Chain Theme Color */
+    opacity: 0.5;
+    /* Premium Soft Tint */
+    z-index: 0;
+    transition: left 0.3s ease, background 0.3s ease;
+    /* Clean vertical divider edge via border or just block */
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* NEW: Content Halves */
+.gas-info-half {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.8rem 0.5rem;
+    position: relative;
+    z-index: 1;
+    /* Content above overlay */
+    text-align: center;
+}
+
+/* NEW: Vertical Separator (Center Line) */
+.gas-vertical-separator {
+    width: 1px;
+    background: rgba(0, 0, 0, 0.05);
+    margin: 0.6rem 0;
+    /* Vertical spacing */
+    position: relative;
+    z-index: 2;
+}
+
+.gas-info-row .label,
+.gas-info-row .value {
+    position: relative;
+    z-index: 1;
+}
+
+.gas-info-row .label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #757575;
+}
+
+.gas-info-row .value {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #666666;
+}
+
+/* ========================================
+   THEME OVERLAY (Chain Color Wash Layer)
+   Visual layer for recipient-address-based theming
+======================================== */
+.send-card__theme-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 36px;
+    pointer-events: none;
+    display: block;
+
+    /* Default: Neutral glass for no address / invalid */
+    background: rgba(255, 255, 255, 0.1);
+
+    /* Layer hierarchy: Above card base/glass, below content */
+    z-index: 1;
+
+    /* Smooth theme transitions */
+    transition: background 0.3s ease;
+}
+
+/* ========================================
+   BTC Theme (Orange Wash)
+   Triggered when recipient address is BTC
+======================================== */
+.send-card.theme-btc .send-card__theme-overlay {
+    background: rgba(255, 183, 101, 0.28);
+}
+
+/* ========================================
+   ETH Theme (Blue Wash)
+   Triggered when recipient address is ETH
+======================================== */
+.send-card.theme-eth .send-card__theme-overlay {
+    background: rgba(122, 159, 255, 0.28);
+}
+
+/* ========================================
+   SOL Theme (Purple Wash)
+   Triggered when recipient address is SOL
+======================================== */
+.send-card.theme-sol .send-card__theme-overlay {
+    background: rgba(153, 69, 255, 0.28);
+}
+
+/* ========================================
+   DEFAULT Theme (Base/Lavender)
+   Triggered when no valid address or fallback
+======================================== */
+.send-card.theme-default .send-card__theme-overlay {
+    background: rgba(185, 154, 217, 0.22);
+}
+
+/* ========================================
+   SLIDER BACKGROUND GLASS
+======================================== */
+.slider-background-glass {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -20rem;
+    /* Extend downwards */
+    height: 450px;
+    /* Adjusted height to balance top edge */
+    /* Covers the slider area */
+    pointer-events: none;
+    z-index: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.glass-layer--base {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    /* Layer 1: Soft Base (Subtle) - faint brightness lift */
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 36px 36px 0 0;
+    box-shadow: none;
+    /* Removed card shadow to avoid heavy look */
+}
+
+.glass-layer--blur {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    /* Layer 2: Glass Diffusion Overlay */
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 36px 36px 0 0;
+}
+
+/* ========================================
+   SLIDER SECTION
+======================================== */
+.slider-section {
+    padding: 1.2rem 1.5rem 2rem;
+    background: transparent;
+    /* Changed from #fff to show glass behind */
+    box-shadow: none;
+    /* Shadow moved to glass layer */
+    position: relative;
+    z-index: 10;
+}
+
+/* ========================================
+   SLIDER WRAPPER
+======================================== */
+.slider-wrapper {
+    width: 100%;
+}
+
+/* ========================================
+   SLIDE BUTTON
+======================================== */
+.slide-button {
+    width: 100%;
+    height: 62px;
+    background-color: #F8F8F8;
+    /* Lighter, cleaner */
+    border-radius: 31px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    /* Soft inner highlight and subtle depth */
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04),
+        inset 0 0 12px rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.02);
+    /* UX Fix: No Select */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+/* Disabled State (Gating) */
+.slide-button.disabled {
+    opacity: 0.6;
+    filter: grayscale(0.8);
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+/* Ensure child elements don't steal pointer events when disabled */
+.slide-button.disabled * {
+    pointer-events: none;
+}
+
+.slider-text {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    text-align: center;
+    width: 100%;
+    font-family: var(--font-serif);
+    font-size: 1.0rem;
+    font-weight: 600;
+    /* Semibold */
+    color: #000000;
+    /* PURE BLACK */
+    letter-spacing: 0px;
+    z-index: 1;
+    pointer-events: none;
+    padding: 0;
+    /* REMOVED padding-left for true center */
+    margin: 0;
+    user-select: none;
+    transition: opacity 0.2s ease;
+}
+
+/* Sent State - Keeps Black Color */
+.slider-text.sent {
+    color: #000000;
+    /* Explicitly Black */
+    text-shadow: none;
+}
+
+.slide-button__knob {
+    position: absolute;
+    left: 5px;
+    top: 5px;
+    bottom: 5px;
+    width: 52px;
+    height: 52px;
+    /* Ceramic / Glass Polish: Subtle radial highlight */
+    background: radial-gradient(120% 120% at 30% 30%, #FFFFFF 0%, #F4F4F4 100%);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.0rem;
+    /* Reduced slightly for thinner look */
+    color: #111111;
+    /* Near-black */
+    cursor: grab;
+    /* Physical shadow + Inner highlight illusion */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12),
+        0 1px 3px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 1);
+    z-index: 2;
+    /* Deep Charcoal Stroke */
+    border: 1.5px solid #2C2C2C;
+    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.slide-button__knob i {
+    /* Optically center arrow if needed */
+    transform: translateX(1px);
+    -webkit-text-stroke: 0.2px #fff;
+    /* Fake thinner stroke if bold */
+}
+
+.slide-button__knob:active {
+    /* No scale -> just tactile press */
+    transform: none;
+    background: #EBEBEB;
+    /* Slight darken */
+    /* Tighter shadow */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    cursor: grabbing;
+}
+
+/* Green fill effect - Premium Gradient */
+.slide-button::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--fill-width, 0%);
+    /* Top-Tier Premium Gradient (Less Saturated, Softer) */
+    background: linear-gradient(180deg, #96E67D 0%, #68D44F 100%);
+    border-radius: 31px;
+    z-index: 0;
+    max-width: 100%;
+    /* Soft Diffusion / Blur feel */
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.5);
+    transition: width 0.1s linear;
+}
+
+.slide-button.resetting::before {
+    transition: width 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* ========================================
+   PREMIUM SUCCESS TOAST
+======================================== */
+.success-toast {
+    position: absolute;
+    bottom: 110px;
+    /* Position above slider */
+    left: 50%;
+    transform: translateX(-50%) translateY(20px) scale(0.95);
+    background: rgba(20, 20, 25, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #fff;
+    padding: 14px 28px;
+    border-radius: 50px;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+    z-index: 5000;
+    white-space: nowrap;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.success-toast.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+}
+
+.success-toast i {
+    color: #57E534;
+    /* Explicit Green matches slider */
+    font-size: 1rem;
+}
+
+/* ========================================
+   [PHASE 21] ACCENT OVERLAY LAYER
+   Non-Destructive Asset Branding
+======================================== */
+.send-card-accent-layer {
+    position: absolute;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    /* Covers bottom half (Amount Section) */
+    pointer-events: none;
+    z-index: 1;
+    /* Sits above theme-overlay (z-1), below content (z-2) */
+
+    /* Transition for smooth switching */
+    opacity: 0;
+    transition: opacity 0.5s ease-out;
+
+    /* Visual Treatment */
+    border-radius: 0 0 36px 36px;
+    /* Match card bottom */
+
+    /* Feathered Top Edge (Fade Out Upwards) */
+    -webkit-mask-image: linear-gradient(to top, black 0%, black 40%, transparent 100%);
+    mask-image: linear-gradient(to top, black 0%, black 40%, transparent 100%);
+
+    /* Subtle Blur for diffusion */
+    filter: blur(12px);
+    will-change: opacity;
+}
+
+/* Visibility Trigger */
+.send-card-accent-layer[class*="accent-"] {
+    opacity: 1;
+}
+
+/* Asset Colors (Premium Radial Wash) */
+
+/* USDT: Green (#26A17B) */
+.send-card-accent-layer.accent-usdt {
+    background: radial-gradient(circle at 50% 0%, rgba(38, 161, 123, 0.22), transparent 65%);
+}
+
+/* USDC: Blue (#2775CA) */
+.send-card-accent-layer.accent-usdc {
+    background: radial-gradient(circle at 50% 0%, rgba(39, 117, 202, 0.22), transparent 65%);
+}
+
+/* BTC: Orange (#F7931A) */
+.send-card-accent-layer.accent-btc {
+    background: radial-gradient(circle at 50% 0%, rgba(247, 147, 26, 0.22), transparent 65%);
+}
+
+/* SOL: Purple (#9945FF) */
+.send-card-accent-layer.accent-sol {
+    background: radial-gradient(circle at 50% 0%, rgba(153, 69, 255, 0.22), transparent 65%);
+}
+
+/* ========================================
+   [PHASE 22] IDENTITY PILL FEEDBACK
+   Visual confirmation on selection
+======================================== */
+.pill-updated {
+    animation: pill-slide-up 0.2s ease-out forwards;
+}
+
+@keyframes pill-slide-up {
+    0% {
+        opacity: 0;
+        transform: translateY(4px) scale(0.98);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1.0);
+    }
+}

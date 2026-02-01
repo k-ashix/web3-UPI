@@ -1,0 +1,90 @@
+/* Background Scale Effect on Open (Maintained) */
+.glass-container.scale-back>*:not(.liquid-overlay) {
+    transform: scale(0.92);
+    filter: blur(8px);
+    /* Deeper blur for liquid contrast */
+    opacity: 0.6;
+    transition: all 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+    border-radius: 20px;
+}
+
+.glass-container.scale-back>.liquid-overlay {
+    transform: translateY(0);
+}
+
+/* Specific Animation States */
+/* 1. Contract to Skip (Bottom Right) */
+.wallet-overlay.contract-to-skip {
+    clip-path: circle(0% at 100% 100%);
+    transition: clip-path 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* 2. Expand from Connect (Center) */
+.wallet-overlay.expand-from-center {
+    /* We animate the opaque "hole" opening up or dissolve */
+    /* Alternative approach for "Fluid Dissolve": */
+    mask-image: radial-gradient(circle at center, transparent 0%, black 0%);
+    -webkit-mask-image: radial-gradient(circle at center, transparent 0%, black 0%);
+    animation: liquid-dissolve 0.8s forwards cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@keyframes liquid-dissolve {
+    0% {
+        -webkit-mask-image: radial-gradient(circle at center, transparent 0%, black 0%);
+    }
+
+    100% {
+        -webkit-mask-image: radial-gradient(circle at center, transparent 150%, black 150%);
+        opacity: 0;
+    }
+}
+
+/* 3. Expand from Dynamic Origin */
+.wallet-overlay.expand-from-origin {
+    /* Default origin if var not set */
+    --origin-x: 50%;
+    --origin-y: 50%;
+    clip-path: circle(0% at var(--origin-x) var(--origin-y));
+    /* Slower duration (1.2s) and smoother easing */
+    animation: liquid-reveal 1.2s forwards cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes liquid-reveal {
+    0% {
+        clip-path: circle(0% at var(--origin-x) var(--origin-y));
+        background: rgba(255, 255, 255, 0.4);
+    }
+
+    100% {
+        clip-path: circle(150% at var(--origin-x) var(--origin-y));
+        background: rgba(255, 255, 255, 0.2);
+    }
+}
+
+/* 4. Contract to Dynamic Origin (Skip) */
+.wallet-overlay.contract-to-origin {
+    /* Uses same variables set by JS */
+    animation: liquid-contract 1.2s forwards cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes liquid-contract {
+    0% {
+        clip-path: circle(150% at var(--origin-x) var(--origin-y));
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    100% {
+        clip-path: circle(0% at var(--origin-x) var(--origin-y));
+        background: rgba(255, 255, 255, 0.4);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 50%;
+    }
+
+    100% {
+        background-position: -200% 50%;
+    }
+}

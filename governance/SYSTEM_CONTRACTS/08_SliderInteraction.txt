@@ -1,0 +1,328 @@
+--------------------------------------------------
+--------------------------------------------------
+SYSTEM SNAPSHOT AUDIT HEADER
+--------------------------------------------------
+Snapshot Type: Implementation Reference
+
+Aligned With:
+- SEND_LIFECYCLE_CONTRACT_v1.0
+- SEND_THEME_CONTRACT_v1.0
+
+Last Alignment:
+30 January 2026, 11:17:46 AM IST (+05:30)
+
+Change Trace (High-Level):
+- Subsystem remains unaffected by recent governance updates
+- No behavioral or logical changes occurred
+- Drag interaction and feedback logic preserved exactly
+
+Audit Notes:
+- This snapshot reflects the system AFTER the above alignments
+- Changes describe behavioral intent, not exact code diffs
+- Snapshot body below is preserved verbatim
+- No snapshot content was rewritten, reordered, or refactored
+--------------------------------------------------
+
+
+SUBSYSTEM CONTRACT: SLIDER INTERACTION SYSTEM
+===============================================================================
+Location: src/modules/send.js (functions: startDrag, drag, endDrag, resetSlider, showToast)  
+Dependencies: Transaction Readiness (validates before TX), State Management
+Dependents: None (terminal UI interaction)
+
+
+1. SYSTEM OVERVIEW
+===============================================================================
+Pipeline:
+Touch/Click → Drag Detection → Progress Tracking → Threshold → Validation → Feedback
+
+Slider Interaction System provides DRAG-TO-CONFIRM pattern for transaction initiation.
+
+OWNS:
+- Slider DOM elements (#sliderContainer, #sliderKnob, .slider-text)
+- Drag state (isDragging, startX, currentX)
+- Visual feedback (knob position, fill width, text opacity)
+- Toast display system (success/error messages)
+
+OBSERVES:
+- VALIDATION_STATE.isAddressValid (gates slider drag start)
+- Mouse/touch events (mousedown, touchstart, mousemove, touchmove, mouseup, touchend)
+
+RESPONSIBILITY:
+Provide premium drag-to-confirm interaction for transaction submission.
+Gate drag initiation behind address validation.
+Reset slider position on validation failure.
+Show toast feedback for all user actions (errors, success).
+
+
+2. AUTHORITY MODEL
+===============================================================================
+SLIDER HAS NO STATE AUTHORITY (purely interactive).
+
+USER INTENT FLOW:
+
+1. User presses slider knob:
+   startDrag() invoked
+
+2. Check VALIDATION_STATE.isAddressValid:
+   If false: preventDefault, showToast, abort
+   If true: begin drag tracking
+
+3. User moves pointer:
+   drag() updates knob position, fill width, text opacity
+
+4. User releases pointer:
+   endDrag() checks threshold (90%)
+   If < 90%: resetSlider (snap back)
+   If >= 90%: validateInputs + deriveTransactionReadiness
+
+5. Validation passes:
+   Show success toast, construct TX_DRY_RUN
+
+6. Validation fails:
+   Show error toast, resetSlider
+
+MUST NEVER:
+- Allow drag without valid address
+- Execute transaction on partial drag (< 90%)
+- Submit transaction without validation
+
+
+3. INPUT & STATE SAFETY
+===============================================================================
+VALIDATION STRATEGY: Multi-layer gating.
+
+GATE 1: Drag Initiation
+  startDrag() check:
+  if (!VALIDATION_STATE.isAddressValid):
+    e.preventDefault()
+    showToast("Enter wallet address first", true)
+    return // Abort drag
+
+GATE 2: Drag Completion Threshold
+  endDrag() check:
+  if (currentX < maxDrag * 0.9):
+    resetSlider() // Snap back, no validation
+
+GATE 3: Input Validation
+  if (currentX >= maxDrag * 0.9):
+    check = validateInputs()
+    if (!check.valid):
+      resetSlider()
+      showToast(check.msg, true) // "Enter a valid amount"
+      return
+
+GATE 4: Transaction Readiness
+  readiness = deriveTransactionReadiness()
+  if (!readiness.isReady):
+    resetSlider()
+    showToast("Network Unavailable or Invalid Data", true)
+    return
+
+FORBIDDEN STATES:
+- Drag initiated without valid address (prevented by Gate 1)
+- TX prepared without amount (prevented by Gate 3)
+- TX prepared without gas data (prevented by Gate 4)
+
+WHY PREVENTION NOT CORRECTION:
+Gating drag at START prevents user from dragging, thinking it will work,
+then seeing error AFTER effort expended (poor UX).
+
+
+4. CORE ENGINE / LOGIC CONTRACT
+===============================================================================
+WHAT IT DOES:
+
+startDrag(e):
+  1. Check VALIDATION_STATE.isAddressValid (gate)
+  2. Set isDragging = true
+  3. Record startX from event clientX
+  4. Disable transition for smooth tracking
+
+drag(e):
+  1. If !isDragging, return
+  2. Calculate moveX = clientX - startX
+  3. Clamp moveX to [0, maxDrag]
+  4. Update knob transform: translateX(currentX)
+  5. Update fill width: --fill-width CSS variable
+  6. Update text opacity: fade out as drag progresses
+
+endDrag(e):
+  1. If !isDragging, return
+  2. Calculate threshold: currentX > maxDrag * 0.9
+  3. If below threshold: resetSlider()
+  4. If above threshold:
+     a. validateInputs()
+     b. deriveTransactionReadiness()
+     c. Construct TX_DRY_RUN
+     d. Show success toast
+     e. resetSlider() after 500ms
+
+resetSlider():
+  1. Add .resetting class (CSS transition trigger)
+  2. Set knob transform: translateX(0)
+  3. Set fill width: 0%
+  4. Reset text: "Slide To Continue", opacity 1
+
+showToast(message, isError):
+  1. Remove existing toast if present
+  2. Create new toast DOM element
+  3. Add icon: checkmark (success) or xmark (error)
+  4. Animate in via .visible class
+  5. Auto-dismiss after 2.5 seconds
+
+WHAT IT MUST NEVER DO:
+- Execute transaction (delegated to wallet SDK, not implemented)
+- Store dragging state globally (uses closure-scoped variables)
+- Allow multiple simultaneous toasts (removes existing first)
+
+BOUNDARY DEFINITION:
+
+INPUT LAYER (browser):
+  Mouse/touch events
+
+TRACKING LAYER (this subsystem):
+  Convert events to drag position
+
+VALIDATION LAYER (Transaction Readiness):
+  Check if drag completion should trigger TX
+
+FEEDBACK LAYER (this subsystem):
+  Visual (slider position) + Toast (messages)
+
+
+5. MIRRORING & DERIVATION RULES
+===============================================================================
+SLIDER POSITION IS EPHEMERAL (not persisted).
+
+VISUAL STATE TRACKING:
+
+currentX (pixels):
+  0px → Slider at start
+  maxDrag * 0.9 → Threshold for completion
+  maxDrag → Fully extended
+
+--fill-width (CSS variable):
+  0% → No fill
+  100% → Full green fill
+  Formula: ((currentX + knobWidth) / containerWidth) * 100
+
+text opacity:
+  1 → Fully visible at start
+  0 → Fully faded at 80% drag
+  Formula: 1 - (currentX / (maxDrag * 0.8))
+
+RESET TRIGGERS:
+
+1. Drag below threshold
+2. Validation failure
+3. After success toast (delayed 500ms)
+
+ANIMATION TIMING:
+
+Drag tracking: No transition (instant follow)
+Reset: 0.6s cubic-bezier(0.25, 1, 0.5, 1) (smooth snap back)
+
+
+6. UX GUARDRAILS
+===============================================================================
+VISUAL FEEDBACK:
+
+Drag in progress:
+  - Knob position tracks finger/cursor exactly
+  - Green fill expands behind knob
+  - "Slide To Continue" text fades out
+
+Completion threshold reached:
+  - Knob snaps to 100%
+  - Fill fills entire slider
+  - Text changes to "Submitted"
+
+Validation failure:
+  - Slider snaps back to 0%
+  - Error toast appears (red xmark icon)
+
+Success:
+  - "Submitted" text shown briefly
+  - Success toast appears (green checkmark)
+  - Slider resets after 500ms
+
+TOAST FEEDBACK:
+
+Error toasts (red xmark):
+  - "Enter wallet address first" (address invalid)
+  - "Enter a valid amount" (amount <= 0)
+  - "Network Unavailable or Invalid Data" (readiness failed)
+
+Success toast (green checkmark):
+  - "Transaction Prepared (Dry Run)"
+
+Toast auto-dismiss: 2.5 seconds
+
+INTENTIONAL FRICTION:
+
+90% threshold (not 100%):
+  Allows slight over-drag without frustration
+  Industry standard (mobile unlock patterns)
+
+Disabled slider if !isAddressValid:
+  Visual: .disabled class adds opacity 0.5
+  Functional: startDrag() aborts immediately
+
+
+7. FAILURE MODES (CONTROLLED)
+===============================================================================
+SILENT FAILURE (degraded state):
+- Missing slider DOM elements → no drag tracking (slider invisible/broken)
+- Toast container missing → toasts not displayed (no feedback)
+
+ALLOWED TO FAIL SILENTLY:
+- Drag outside viewport → clamped to [0, maxDrag]
+- Multiple rapid drags → isDragging flag prevents overlap
+
+NEVER FAILS HARD:
+- Event listener errors logged, not thrown
+- Missing DOM elements checked (if (!sliderKnob) return)
+
+DEGRADED BEHAVIOR:
+
+If slider DOM missing:
+  - User cannot drag (visual bug)
+  - Keyboard/accessibility alternative not provided (non-goal)
+  - User must use different flow (not implemented)
+
+If toast system fails:
+  - Validation still runs
+  - TX still prepared (or blocked)
+  - User sees slider reset but no error message (confusing UX)
+
+
+8. NON-GOALS (CRITICAL)
+===============================================================================
+DOES NOT HANDLE:
+- Keyboard accessibility (no Enter key to submit)
+- Screen reader announcements (ARIA live regions)
+- Haptic feedback (mobile vibration)
+- Animation customization (locked to 0.6s cubic-bezier)
+- Multi-touch gestures (two-finger drag)
+- Drag inertia (slider stops instantly on release)
+- Customizable threshold (hardcoded 90%)
+- Long-press initiation
+- Alternative confirmation methods (button click)
+
+WHY THESE ARE NON-GOALS:
+Current scope is PREMIUM VISUAL UX for pointer-based interaction.
+Accessibility features require separate implementation (keyboard shortcuts, ARIA).
+Mobile-specific features (haptics) require native integration.
+
+PRODUCTION REQUIREMENTS (not implemented):
+- Keyboard shortcut (Ctrl+Enter to submit)
+- ARIA labels for screen readers
+- Haptic feedback via Vibration API
+- Configurable threshold (user preference)
+- Alternative "Confirm" button for accessibility
+
+
+===============================================================================
+END OF CONTRACT
+===============================================================================
