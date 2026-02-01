@@ -162,13 +162,13 @@ export const InteractionUtils = {
             const link = document.createElement('link');
             link.id = 'scan-css';
             link.rel = 'stylesheet';
-            link.href = 'scan-styles.css';
+            link.href = '1_Scan/scan-styles.css';
             document.head.appendChild(link);
         }
 
         // 3. Fetch, Parse, and Inject
         try {
-            const resp = await fetch('scan.html');
+            const resp = await fetch('1_Scan/scan.html');
             if (!resp.ok) return;
 
             const text = await resp.text();
@@ -188,7 +188,7 @@ export const InteractionUtils = {
                 // 4. Inject Logic (Once)
                 if (!window.__scanLoaded) {
                     const script = document.createElement('script');
-                    script.src = 'scan-script.js';
+                    script.src = '1_Scan/scan-script.js';
                     document.body.appendChild(script);
                     window.__scanLoaded = true;
                     log('Scan script loaded');
