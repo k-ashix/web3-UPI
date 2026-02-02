@@ -3,6 +3,8 @@
 
 A progressive web app that brings the familiar ease of UPI into Web3.
 
+🌍 **Live Demo:** https://web3-upi.netlify.app/
+
 Web3 UPI lets users send crypto across multiple blockchains using a single, simple flow — no manual chain selection, no asset confusion, and no complex wallet knowledge required.
 
 ## 🎯 Project Overview
