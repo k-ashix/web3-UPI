@@ -81,6 +81,7 @@ class GeminiOverlay {
         if (!document.getElementById(this.rootId)) {
             const root = document.createElement('div');
             root.id = this.rootId;
+            root.hidden = true; // [FOUC Fix] Hard-hide immediately
             root.className = 'gemini-overlay-hidden';
             root.innerHTML = `
                 <div class="gemini-backdrop" id="gemini-backdrop"></div>
@@ -214,6 +215,7 @@ class GeminiOverlay {
         this._render();
 
         const root = document.getElementById(this.rootId);
+        if (root) root.hidden = false; // [FOUC Fix] Unhide before animation
         root.classList.remove('gemini-overlay-hidden');
 
         // Trigger reflow for animation
@@ -262,6 +264,7 @@ class GeminiOverlay {
         setTimeout(() => {
             root.classList.remove('gemini-overlay-hiding');
             root.classList.add('gemini-overlay-hidden');
+            root.hidden = true; // [FOUC Fix] Re-apply hard hide
             panel.classList.remove('gemini-closing');
             this.state.isOpen = false;
             document.body.style.overflow = '';
@@ -480,7 +483,7 @@ class GeminiOverlay {
             // [Multi-Model Router] Select and retry with fallback
             let response = null;
             let attempt = 0;
-            const maxAttempts = 5; // Gemini 3 Flash → 3 Pro → 2.5 Flash → 1.5 Pro → 1.5 Flash
+            const maxAttempts = 3; // Pro High -> Pro Low -> Flash
 
             while (attempt < maxAttempts && !response?.ok) {
                 const activeModel = modelRouter.selectModel();
@@ -489,12 +492,29 @@ class GeminiOverlay {
                     console.log(`[AI] using model: ${activeModel}`);
                 }
 
+                // [Strict Gemini 3.x Logic]
+                // Resolve alias names (e.g. -high, -low) to real model IDs and applying config
+                let realModel = activeModel;
+                let generationConfig = {};
+
+                if (activeModel.includes('-high')) {
+                    realModel = activeModel.replace('-high', '');
+                    generationConfig = { temperature: 1.0, topK: 64 }; // Simulation of High Thinking/Creativity
+                } else if (activeModel.includes('-low')) {
+                    realModel = activeModel.replace('-low', '');
+                    generationConfig = { temperature: 0.4, topK: 32 }; // Simulation of Low Thinking/Precision
+                } else {
+                    // Flash or standard Pro
+                    generationConfig = { temperature: 0.7, topK: 40 };
+                }
+
                 try {
-                    response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${apiKey}`, {
+                    response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${realModel}:generateContent?key=${apiKey}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            contents: [{ parts: [{ text: finalPromptText }] }]
+                            contents: [{ parts: [{ text: finalPromptText }] }],
+                            generationConfig: generationConfig
                         }),
                         signal: this.abortController.signal
                     });

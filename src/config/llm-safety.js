@@ -58,14 +58,12 @@ export const PROMPT_SANITIZER_CONFIG = {
 };
 
 // Model Selection Configuration (Prompt 4)
-// Priority: Gemini 3 (latest preview) → 2.5 → 1.5 (stable)
+// Priority: Gemini 3 Pro (High) → Gemini 3 Pro (Low) → Gemini 3 Flash
 export const MODEL_CONFIG = {
-    DEFAULT_MODEL: "gemini-3-flash-preview", // Latest Gemini 3 (fast)
+    DEFAULT_MODEL: "gemini-3-pro-preview-high", // Pro with High Thinking
     FALLBACK_MODELS: [
-        "gemini-3-pro-preview",  // Gemini 3 Pro (higher quality)
-        "gemini-2.5-flash",      // Gemini 2.5
-        "gemini-1.5-pro",        // Stable 1.5 Pro
-        "gemini-1.5-flash"       // Stable 1.5 Flash (most reliable)
+        "gemini-3-pro-preview-low",  // Pro with Low Thinking
+        "gemini-3-flash-preview"     // Flash (Standard)
     ],
     TIMEOUT_MS: 30000
 };

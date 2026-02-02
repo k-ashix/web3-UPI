@@ -1,20 +1,18 @@
-# Web3 UPI – Multi-Chain Crypto Send App with Gemini AI Assistant
+# Web3 UPI – Making Crypto Transfers Feel as Simple as UPI
+### Web3 Payments, Without the Web3 Complexity
 
-A progressive web app for sending cryptocurrency across multiple chains (Ethereum, Bitcoin, Solana, Polygon, Base, Arbitrum, etc.) with an integrated Gemini AI assistant for transaction guidance and safety.
+A progressive web app that brings the familiar ease of UPI into Web3.
 
-## :earth_africa: Live Demo
+Web3 UPI lets users send crypto across multiple blockchains using a single, simple flow — no manual chain selection, no asset confusion, and no complex wallet knowledge required.
 
-🚀 Try the live app here:  
-👉 https://web3-upi.netlify.app/
+## 🎯 Project Overview
 
-## :dart: Project Overview
-
-Web3 UPI combines a clean, mobile-first crypto wallet interface with Gemini's advanced AI capabilities to help users navigate complex blockchain transactions. The app supports:
+Web3 UPI is designed to make crypto transfers feel as natural and familiar as UPI payments. The app supports:
 - Multi-chain transaction sending (EVM chains, Bitcoin, Solana)
 - Real-time asset and chain detection via address parsing
 - QR code scanning for wallet addresses
 - UPI-style amount input with fiat conversion
-- AI-powered transaction assistance with safety-first design
+- Built-in transaction assistance with a safety-first design
 
 ## ✨ Features
 
@@ -26,10 +24,10 @@ Web3 UPI combines a clean, mobile-first crypto wallet interface with Gemini's ad
 - **Transfer Modes**: Bitcoin supports Taproot, SegWit, and Legacy address types
 - **Gas/Fee Preview**: Real-time fee estimation before sending
 
-### Gemini AI Assistant
+### Smart Transaction Assistance
 - **Contextual Help**: AI understands your current transaction context (chain, asset, amounts)
 - **Safety Guidance**: Provides warnings about high fees, unverified addresses, and risky chains
-- **Multi-Model Routing**: Automatically selects the best Gemini model with fallbacks (Gemini 2.0 Flash Exp → Gemini 1.5 Flash → Gemini 1.5 Pro)
+- **Adaptive Model Routing**: Automatically selects the most suitable model based on context and availability
 - **Streaming Responses**: Real-time AI responses with stop capability
 - **Conversation Scoping**: Chat history persists within a single Send session
 
@@ -42,26 +40,20 @@ User Input → PromptSanitizer → System Prompt → Model Router → Response G
 ```
 
 ### Safety Components
-1. **PromptSanitizer** (`src/utils/PromptSanitizer.js`)
-   - Neutralizes prompt injection attempts
-   - Enforces character limits (2000 chars)
-   - Wraps user input in delimiters to isolate from system instructions
 
-2. **LLMRequestBuilder** (`src/utils/LLMRequestBuilder.js`)
-   - Assembles API payloads with system prompts
-   - Provides transaction context to the AI
-   - Configures safety settings and generation parameters
+Safety in Web3 UPI is designed to be **invisible, predictable, and non-intrusive** — protecting users without adding complexity.
 
-3. **GeminiModelRouter** (`src/utils/GeminiModelRouter.js`)
-   - Default: `gemini-2.0-flash-exp` (fastest, latest preview)
-   - Fallback 1: `gemini-1.5-flash-002` (stable, fast)
-   - Fallback 2: `gemini-1.5-pro-002` (highest quality)
-   - Automatic model switching on quota/availability errors
+- **Input Protection**  
+  All user inputs are validated and constrained to prevent prompt injection, misuse, or unexpected behavior.
 
-4. **ResponseGuardrails** (`src/utils/ResponseGuardrails.js`)
-   - Blocks responses requesting sensitive data (private keys, seed phrases)
-   - Detects scam patterns (fake support, phishing links)
-   - Ensures responses stay within assist-only boundaries (no executing transactions)
+- **Context-Aware Requests**  
+  Assistance is generated using only the minimum transaction context required (chain, asset, fees), ensuring relevance without overreach.
+
+- **Strict Model Routing**  
+  Automatically selects the best supported model for the current context, with controlled fallback behavior and room to expand as new models are added in future updates.
+
+- **Response Guardrails**  
+  The system blocks requests for sensitive data (private keys, seed phrases), detects scam or phishing patterns, and ensures all responses remain assist-only — never executing transactions.
 
 ## 🚀 How to Run Locally
 
@@ -73,7 +65,7 @@ User Input → PromptSanitizer → System Prompt → Model Router → Response G
 ### Steps
 1. **Clone the repository**:
    ```bash
-   git clone <your-repo-url>
+   git clone <repo-url>
    cd web3-UPI
    ```
 
@@ -117,6 +109,18 @@ Then refresh the page.
 - Response guardrail violations
 - Model fallback triggers
 
+## 🌐 Deployment Options
+
+### Recommended: Netlify (Zero Config)
+1. Push code to GitHub
+2. Connect repo to [Netlify](https://netlify.com)
+3. Deploy with default settings (no build step needed)
+4. Users must add their own API keys via Settings
+
+### Alternative: Vercel, GitHub Pages, Cloudflare Pages
+- All static hosting platforms work (this is a client-side-only app)
+- No server-side code or build process required
+
 ## 🔐 Security Notes
 
 ⚠️ **NEVER commit API keys to the repository!**
@@ -158,7 +162,9 @@ See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
 
 ## 📄 License
 
-
 ---
 
 **Built with ❤️ for the future of decentralized finance**
+
+*Bringing the UPI experience people trust into Web3 —  
+so sending crypto feels simple, familiar, and effortless.*

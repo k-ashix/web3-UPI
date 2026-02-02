@@ -33,19 +33,38 @@
     // Camera Initialization
     async function initCamera() {
         try {
-            stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment' }
-            });
+            // Updated: Try ideal environment facing mode first
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: "environment" } }
+                });
+            } catch (e) {
+                // Fallback: Try any available video source
+                console.warn('[Scan] Environment camera failed, trying fallback:', e);
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            }
+
             video.srcObject = stream;
-            cameraFailed = false;
-            video.onloadedmetadata = () => {
-                scanning = true;
-                scanQRCode();
-            };
+            cameraFailed = false; // Reset failure flag
+
+            // Updated: Explicitly play video to ensure stream starts
+            await video.play();
+
+            // Setup canvas and start scanning only after play succeeds
+            scanning = true;
+            scanQRCode();
+
         } catch (err) {
             console.error('[Scan] Camera error:', err);
             cameraFailed = true;
-            showMessage('Camera access denied. Please enable camera permissions.', 'error');
+
+            if (err.name === 'NotFoundError') {
+                showMessage('No camera found. Use Gallery upload.', 'error');
+            } else if (err.name === 'NotAllowedError') {
+                showMessage('Camera permission denied. Enable it in browser settings.', 'error');
+            } else {
+                showMessage('Camera access denied. Please enable camera permissions.', 'error');
+            }
         }
     }
 
@@ -238,16 +257,34 @@
 
         try {
             const track = stream.getVideoTracks()[0];
-            const capabilities = track.getCapabilities();
+            let torchSupported = false;
 
-            if (capabilities.torch) {
+            // 1. Check standard capabilities
+            if (track.getCapabilities && track.getCapabilities().torch) {
+                torchSupported = true;
+            }
+
+            // 2. Fallback: ImageCapture (Android Chrome)
+            if (!torchSupported && typeof window.ImageCapture === 'function') {
+                try {
+                    const ic = new window.ImageCapture(track);
+                    const pc = await ic.getPhotoCapabilities();
+                    if (pc && pc.torch) {
+                        torchSupported = true;
+                    }
+                } catch (e) {
+                    console.warn('[Scan] ImageCapture check failed:', e);
+                }
+            }
+
+            if (torchSupported) {
                 flashOn = !flashOn;
                 await track.applyConstraints({
                     advanced: [{ torch: flashOn }]
                 });
                 flashBtn.classList.toggle('active', flashOn);
             } else {
-                showMessage('Flashlight not supported on this device', 'info');
+                showMessage('Flash not supported on this device/browser', 'info');
             }
         } catch (err) {
             console.error('[Scan] Flash error:', err);
