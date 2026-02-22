@@ -7,12 +7,31 @@
     max-height: 850px;
     position: relative;
     background: var(--gradient-container);
-    display: flex;
-    flex-direction: column;
-    padding: 24px;
-    gap: 32px;
+    --shell-pad: 24px;
     overflow: hidden;
     /* Native scrolling disabled for Shell */
+}
+
+/* App Content Core Wrapper */
+.app-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    padding: var(--shell-pad);
+    gap: 32px;
+}
+
+/* Full Shell Overlay Layer */
+.overlay-host {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 900;
+}
+
+.overlay-host:has(.wallet-overlay.active) {
+    pointer-events: auto;
 }
 
 /* Header */

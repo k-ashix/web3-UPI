@@ -71,19 +71,39 @@
 
 /* Wallet Connection Overlay (First Launch) */
 .wallet-overlay {
-    min-height: 100%;
-    /* min-height allows extension with scroll */
+    /* Explicit positioning lock: anchor for .skip-btn-corner */
+    position: absolute;
+    inset: 0;
     z-index: 2000;
     /* Highest z-index */
     background: var(--overlay-gradient);
     backdrop-filter: blur(var(--blur-xl));
     -webkit-backdrop-filter: blur(var(--blur-xl));
-    align-items: center;
-    justify-content: center;
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow: hidden;
+    overflow-x: hidden;
+    overscroll-behavior: none;
+    isolation: isolate;
+    /* FIX: Prevent backdrop-filter tearing */
+    contain: paint;
+    /* FIX: Force compositor layering bounds */
+    will-change: opacity, backdrop-filter;
+    transform: translateZ(0);
+    backface-visibility: hidden;
     /* HARD FIX: Default to DEAD */
     transition: opacity var(--transition-slower) var(--easing-standard);
-    clip-path: circle(150% at 50% 50%);
     /* Default open state */
+}
+
+/* Wallet Overlay Frame - matches visible shell area */
+.wallet-overlay-frame {
+    position: absolute;
+    inset: var(--shell-pad, 24px);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
 }
 
 /* Content Fade In (Stage 2) */

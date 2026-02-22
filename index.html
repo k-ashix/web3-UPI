@@ -25,6 +25,7 @@
 
 <body>
     <div class="glass-container">
+        <div class="app-content">
         <!-- Header -->
         <header class="header">
             <div class="user-profile">
@@ -185,41 +186,46 @@
                 <!-- Rendered by NotificationSection.js -->
             </div>
         </div>
-        <!-- Wallet Connection Overlay (First Launch Gate) -->
-        <div class="wallet-overlay" id="walletOverlay">
-            <div class="wallet-overlay-content">
-                <div class="wallet-intro-center">
-                    <div class="wallet-icon-large">
-                        <img src="assets/wallet-icon-glass.png" onerror="this.src='assets/scan.png'" alt="Wallet">
-                    </div>
-                    <h1>Connect Wallet</h1>
-                    <p>Unlock the full Web3 experience</p>
+        </div>
 
-                    <button class="connect-main-btn" id="connectMainBtn">
-                        Connect Wallet
-                    </button>
+        <div class="overlay-host" id="overlayHost">
+            <!-- Wallet Connection Overlay (First Launch Gate) -->
+            <div class="wallet-overlay" id="walletOverlay">
+            <div class="wallet-overlay-frame">
+                <div class="wallet-overlay-content">
+                    <div class="wallet-intro-center">
+                        <div class="wallet-icon-large">
+                            <img src="assets/wallet-icon-glass.png" onerror="this.src='assets/scan.png'" alt="Wallet">
+                        </div>
+                        <h1>Connect Wallet</h1>
+                        <p>Unlock the full Web3 experience</p>
 
-                    <!-- Hidden Options (Revealed on click) -->
-                    <div class="wallet-options-grid" id="walletOptionsGrid">
-                        <button class="wallet-option-card" data-type="ethereum">
-                            <img src="assets/eth.png" alt="ETH">
-                            <span>Ethereum</span>
+                        <button class="connect-main-btn" id="connectMainBtn">
+                            Connect Wallet
                         </button>
-                        <button class="wallet-option-card" data-type="solana">
-                            <img src="assets/sol.png" alt="SOL">
-                            <span>Solana</span>
-                        </button>
-                        <button class="wallet-option-card" data-type="walletconnect">
-                            <img src="assets/wallet-connect.png" onerror="this.style.display='none'" alt="WC">
-                            <span>WalletConnect</span>
-                        </button>
+
+                        <!-- Hidden Options (Revealed on click) -->
+                        <div class="wallet-options-grid" id="walletOptionsGrid">
+                            <button class="wallet-option-card" data-type="ethereum">
+                                <img src="assets/eth.png" alt="ETH">
+                                <span>Ethereum</span>
+                            </button>
+                            <button class="wallet-option-card" data-type="solana">
+                                <img src="assets/sol.png" alt="SOL">
+                                <span>Solana</span>
+                            </button>
+                            <button class="wallet-option-card" data-type="walletconnect">
+                                <img src="assets/wallet-connect.png" onerror="this.style.display='none'" alt="WC">
+                                <span>WalletConnect</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
-
                 <button class="skip-btn-corner" id="skipWalletBtn">
                     Skip for now
                 </button>
             </div>
+        </div>
         </div>
     </div>
 
