@@ -347,3 +347,161 @@
 }
 
 /* Manual Dark Mode Override - Handled by variables.css */
+
+/* ========================================= */
+/* DESKTOP PHONE PREVIEW SHELL (>=900px)     */
+/* ========================================= */
+@media (min-width: 900px) {
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        /* Removed forced background to respect system default */
+        margin: 0;
+        overflow: hidden;
+    }
+
+    .phone-preview {
+        position: relative;
+        width: 100%;
+        max-width: 400px;
+        /* Desktop phone height */
+        height: min(840px, calc(100vh - 80px));
+        isolation: isolate;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* Subtle hardware perspective */
+        perspective: 2000px;
+        transform: rotateX(1deg) translateZ(0);
+        transform-style: preserve-3d;
+    }
+
+    .phone-device {
+        position: absolute;
+        /* Bezel thickness extending outwards */
+        inset: -14px;
+        /* Deep metal tone material surface */
+        background: linear-gradient(135deg, #2c2d30 0%, #151516 100%);
+        border-radius: 54px;
+        /* Layered shadow physics: inner rim + inner bevel + contact shadow + ambient shadow */
+        box-shadow:
+            inset 0 1px 2px rgba(255, 255, 255, 0.15),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+            inset 0 0 8px rgba(0, 0, 0, 0.6),
+            0 16px 32px -10px rgba(0, 0, 0, 0.3),
+            0 32px 64px -12px rgba(0, 0, 0, 0.15);
+        pointer-events: none;
+        /* Removed z-index: 0 to untrap stacking context so notch paints above .phone-screen */
+        /* Edge contrast shift */
+        border: 1px solid #3a3b3e;
+        border-bottom-color: #0a0b0c;
+    }
+
+    .phone-camera {
+        position: absolute;
+        top: 21px;
+        /* Tightly balanced with the slit */
+        left: 50%;
+        transform: translateX(-50%);
+        width: 13px;
+        /* Slightly larger dot */
+        height: 13px;
+        background: #121316;
+        border-radius: 50%;
+        z-index: 1000;
+        pointer-events: none;
+        box-shadow:
+            inset 0 -1px 1px rgba(255, 255, 255, 0.08),
+            inset 0 1px 3px rgba(0, 0, 0, 0.9);
+        /* Deepened inset, removed outer floating shadow */
+        border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .phone-camera::before {
+        content: '';
+        position: absolute;
+        top: -14px;
+        /* Slightly further up, adjusting for larger dot */
+        left: 50%;
+        transform: translateX(-50%);
+        width: 66px;
+        /* Slightly wider slit */
+        height: 4px;
+        /* Slimmer earpiece */
+        background: #16171a;
+        border-radius: 2px;
+        box-shadow:
+            inset 0 1px 2px rgba(0, 0, 0, 0.6),
+            inset 0 -1px 1px rgba(255, 255, 255, 0.04);
+    }
+
+    /* Side Buttons Refinement - Embedded Realism */
+    .phone-btn {
+        position: absolute;
+        background: linear-gradient(to right, #303134, #151516);
+        width: 3px;
+        border-radius: 2px;
+        pointer-events: none;
+        /* Remove harsh border, rely on shadow for edge definition */
+    }
+
+    .phone-btn-power {
+        /* Flush mount with the frame based on width */
+        right: calc(-1 * 3px);
+        top: 180px;
+        height: 60px;
+        /* Embedded slot shadow: tight contact + subtle highlight */
+        box-shadow:
+            inset 1px 0 1px rgba(255, 255, 255, 0.12),
+            -1px 0 1px rgba(0, 0, 0, 0.8);
+        /* Reduced blur to 1px */
+    }
+
+    .phone-btn-vol-up {
+        left: calc(-1 * 3px);
+        top: 150px;
+        height: 50px;
+        background: linear-gradient(to left, #303134, #151516);
+        box-shadow:
+            inset -1px 0 1px rgba(255, 255, 255, 0.12),
+            1px 0 1px rgba(0, 0, 0, 0.8);
+    }
+
+    .phone-btn-vol-down {
+        left: calc(-1 * 3px);
+        top: 215px;
+        height: 50px;
+        background: linear-gradient(to left, #303134, #151516);
+        box-shadow:
+            inset -1px 0 1px rgba(255, 255, 255, 0.12),
+            1px 0 1px rgba(0, 0, 0, 0.8);
+    }
+
+    .phone-screen {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: 40px;
+        overflow: hidden;
+        z-index: 0;
+        /* Create a containing block for fixed overlays so they clip to curves */
+        transform: translateZ(0);
+        background: transparent;
+        /* Screen interior highlight & top separation depth (no layout shift) */
+        box-shadow:
+            inset 0 4px 10px -2px rgba(0, 0, 0, 0.4),
+            inset 0 0 0 2px rgba(0, 0, 0, 0.5),
+            inset 0 0 0 3px rgba(255, 255, 255, 0.05);
+    }
+
+    .phone-screen .glass-container {
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        max-height: none;
+        border-radius: 0;
+        /* Let .phone-screen handle rounding */
+    }
+}

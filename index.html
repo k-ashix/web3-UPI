@@ -24,7 +24,15 @@
 </head>
 
 <body>
-    <div class="glass-container">
+    <div class="phone-preview">
+        <div class="phone-device">
+            <div class="phone-camera"></div>
+            <div class="phone-btn phone-btn-power"></div>
+            <div class="phone-btn phone-btn-vol-up"></div>
+            <div class="phone-btn phone-btn-vol-down"></div>
+        </div>
+        <div class="phone-screen">
+            <div class="glass-container">
         <div class="app-content">
         <!-- Header -->
         <header class="header">
@@ -229,8 +237,10 @@
         </div>
     </div>
 
-    <!-- Blur Overlay for Interactions -->
-    <div class="overlay-blur" id="overlayBlur"></div>
+            <!-- Blur Overlay for Interactions -->
+            <div class="overlay-blur" id="overlayBlur"></div>
+        </div>
+    </div>
 
     <script type="module" src="src/app/main.js"></script>
 </body>
