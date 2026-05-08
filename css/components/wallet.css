@@ -1,15 +1,28 @@
 .wallet-overlay-content {
     width: 100%;
-    min-height: 100%;
-    /* Extends with content for scroll continuity */
+    flex: 1;
+    min-height: 0;
+    /* State 1: Connect Wallet (Locked) */
+    overflow-y: hidden;
+    overflow-x: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     position: relative;
+    box-sizing: border-box;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
     padding: 32px;
-    padding-bottom: 80px;
-    /* Extra space at bottom for smooth scroll end */
+    padding-bottom: 32px;
+    /* Prevent ghost space */
+}
+
+/* State 2: Options (Scrollable) */
+.wallet-overlay-content:has(.show-options) {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
 }
 
 .wallet-intro-center {
